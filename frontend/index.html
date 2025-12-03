@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ru" data-color-scheme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ozon & Wildberries Product Manager</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header-main">
+      <div class="header-title">
+        <h1>Ozon & Wildberries Product Manager</h1>
+        <small>
+          Создание и редактирование карточек товаров через API.
+          Безопасные тестовые запросы + визуализация.
+        </small>
+      </div>
+      <div class="flex-row">
+        <div class="pill-toggle" aria-label="Маркетплейс">
+          <button id="mp-ozon" type="button" class="active">Ozon</button>
+          <button id="mp-wb" type="button">Wildberries</button>
+          <button id="mp-both" type="button">Оба 🔗</button>
+        </div>
+        <span class="badge" title="Фейковые запросы, только формирование payload">
+          <span class="badge-dot"></span> sandbox mode
+        </span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: CONFIG + PRODUCT FORM -->
+      <section>
+        <div class="card">
+          <div class="api-section-title">
+            <h2>API настройки</h2>
+            <span id="conn-status" class="status status-warning">
+              <span class="status-dot"></span> токены не заданы
+            </span>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="ozon-client-id">Ozon Client ID</label>
+              <input id="ozon-client-id" class="input" type="text" autocomplete="off"
+                     placeholder="client_id из кабинета Ozon" />
+            </div>
+            <div>
+              <label for="ozon-api-key">Ozon API Key</label>
+              <input id="ozon-api-key" class="input" type="password" autocomplete="off"
+                     placeholder="API ключ Ozon" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="wb-api-key">Wildberries API Key</label>
+              <input id="wb-api-key" class="input" type="password" autocomplete="off"
+                     placeholder="API ключ WB (X-API-Key)" />
+            </div>
+            <div>
+              <label for="env-select">Среда</label>
+              <select id="env-select">
+                <option value="sandbox" selected>Sandbox (только генерация payload)</option>
+                <option value="prod">Prod (отправка запросов — требуются реальные ключи)</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="hint">
+            В режиме <b>Sandbox</b> приложение не делает HTTP‑запросы, а только показывает,
+            как будет выглядеть тело запроса к API.
+          </p>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+          <div class="api-section-title">
+            <h2>Карточка товара</h2>
+            <span id="operation-label" class="badge">
+              <span class="badge-dot"></span>
+              Создание / обновление
+            </span>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="sku">Артикул (offer_id / vendorCode)</label>
+              <input id="sku" class="input" type="text" placeholder="Уникальный ID товара" />
+            </div>
+            <div>
+              <label for="name">Название товара</label>
+              <input id="name" class="input" type="text"
+                     placeholder="Тип + бренд + модель + ключевая характеристика" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="brand">Бренд</label>
+              <input id="brand" class="input" type="text" placeholder="например, Apple" />
+            </div>
+            <div>
+              <label for="price">Цена, ₽</label>
+              <input id="price" class="input" type="number" step="0.01" min="0" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="stock">Остаток, шт</label>
+              <input id="stock" class="input" type="number" step="1" min="0" />
+            </div>
+            <div>
+              <label for="category">Категория (условно)</label>
+              <input id="category" class="input" type="text"
+                     placeholder="для Ozon/WB нужно будет подставить ID дерева категорий" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="desc">Описание</label>
+              <textarea id="desc"
+                        placeholder="Краткое продающее описание товара с ключевыми преимуществами."></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="images">Ссылки на изображения (через запятую)</label>
+              <textarea id="images"
+                        placeholder="https://..., https://..."></textarea>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-build-payload" class="btn" type="button">
+              Сформировать payload
+            </button>
+            <button id="btn-send" class="btn btn-secondary" type="button">
+              Отправить в API (Prod)
+            </button>
+          </div>
+
+          <p class="hint">
+            Для реальной интеграции тебе нужно будет взять из документации
+            конкретные методы: для Ozon, например,
+            <code>/v2/product/import</code> (создание/обновление товаров),
+            для WB — методы из раздела <b>Product Management</b>.
+          </p>
+        </div>
+      </section>
+
+      <!-- RIGHT: LOG + VISUALIZATION -->
+      <section>
+        <div class="card">
+          <div class="api-section-title">
+            <h2>Лог запросов</h2>
+            <button id="btn-clear-log" type="button" class="btn btn-secondary" style="font-size: 11px;">
+              Очистить лог
+            </button>
+          </div>
+          <div id="log" class="log" aria-live="polite"></div>
+        </div>
+
+        <div class="card">
+          <h2>Визуализация</h2>
+          <div class="charts">
+            <div class="chart-box">
+              <div class="chart-placeholder"></div>
+              <h3>Распределение цен по маркетплейсам</h3>
+              <div class="chart-caption">
+                Псевдо‑диаграмма: текущее значение цены и условные средние по Ozon/WB.
+              </div>
+              <div class="metrics-row" id="price-metrics">
+                <!-- заполняется JS -->
+              </div>
+            </div>
+
+            <div class="chart-box">
+              <div class="chart-placeholder"></div>
+              <h3>Остатки и потенциальный оборот</h3>
+              <div class="chart-caption">
+                Оценка возможного выручки = цена × остаток (простейшая визуализация).
+              </div>
+              <div class="metrics-row" id="stock-metrics">
+                <!-- заполняется JS -->
+              </div>
+            </div>
+          </div>
+
+          <p class="hint" style="margin-top: 10px;">
+            Здесь можно дальше прикрутить настоящие графики (Plotly / Chart.js) и реальные данные
+            по продажам из аналитических методов Ozon/WB.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Приложение демонстрирует структуру интеграции: подготовку payload, базовую валидацию и визуализацию.
+      Для боевой версии нужно добавить реальные HTTP‑запросы (например, через <code>requests</code> в Python backend
+      или через отдельный сервис).
+    </footer>
+  </div>
+
+  <script>
+    // Состояние
+    const state = {
+      marketplace: "ozon",
+      env: "sandbox",
+      lastPayload: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const mpOzonBtn = $("mp-ozon");
+    const mpWbBtn = $("mp-wb");
+    const mpBothBtn = $("mp-both");
+    const envSelect = $("env-select");
+    const connStatus = $("conn-status");
+    const logEl = $("log");
+    const priceMetricsEl = $("price-metrics");
+    const stockMetricsEl = $("stock-metrics");
+    const btnBuildPayload = $("btn-build-payload");
+    const btnSend = $("btn-send");
+    const btnClearLog = $("btn-clear-log");
+
+    const fields = {
+      sku: $("sku"),
+      name: $("name"),
+      brand: $("brand"),
+      price: $("price"),
+      stock: $("stock"),
+      category: $("category"),
+      desc: $("desc"),
+      images: $("images"),
+      ozonClientId: $("ozon-client-id"),
+      ozonApiKey: $("ozon-api-key"),
+      wbApiKey: $("wb-api-key")
+    };
+
+    function nowTime() {
+      const d = new Date();
+      return d.toISOString().split("T")[1].split(".")[0];
+    }
+
+    function log(level, message, payload) {
+      const div = document.createElement("div");
+      div.className = "log-entry";
+
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "time";
+      timeSpan.textContent = "[" + nowTime() + "]";
+
+      const levelSpan = document.createElement("span");
+      const levelClass =
+        level === "error" ? "level-error" :
+        level === "request" ? "level-request" :
+        "level-info";
+      levelSpan.className = levelClass;
+      levelSpan.textContent =
+        level === "error" ? "ERROR" :
+        level === "request" ? "REQ" : "INFO";
+
+      const msgSpan = document.createElement("span");
+      msgSpan.textContent = " " + message;
+
+      div.appendChild(timeSpan);
+      div.appendChild(levelSpan);
+      div.appendChild(msgSpan);
+
+      if (payload) {
+        const pre = document.createElement("pre");
+        pre.style.marginTop = "2px";
+        pre.style.whiteSpace = "pre-wrap";
+        pre.textContent = JSON.stringify(payload, null, 2);
+        div.appendChild(pre);
+      }
+
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateMarketplaceUI() {
+      mpOzonBtn.classList.remove("active");
+      mpWbBtn.classList.remove("active");
+      mpBothBtn.classList.remove("active");
+
+      if (state.marketplace === "ozon") {
+        mpOzonBtn.classList.add("active");
+      } else if (state.marketplace === "wb") {
+        mpWbBtn.classList.add("active");
+      } else if (state.marketplace === "both") {
+        mpBothBtn.classList.add("active");
+      }
+
+      log("info", "Маркетплейс переключен на " + state.marketplace.toUpperCase());
+      rebuildMetrics();
+    }
+
+    function updateEnv() {
+      state.env = envSelect.value;
+      const isSandbox = state.env === "sandbox";
+      const text = isSandbox
+        ? "sandbox: запросы не отправляются"
+        : "prod: возможна отправка запросов (нужны реальные ключи)";
+      const cls = isSandbox ? "status-warning" : "";
+
+      connStatus.className = "status " + cls;
+      connStatus.innerHTML = '<span class="status-dot"></span>' + text;
+      log("info", "Среда: " + state.env);
+    }
+
+    function getCommonProductFields() {
+      const price = parseFloat(fields.price.value) || 0;
+      const stock = parseFloat(fields.stock.value) || 0;
+      const images = fields.images.value
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      return {
+        sku: fields.sku.value.trim(),
+        name: fields.name.value.trim(),
+        brand: fields.brand.value.trim(),
+        price,
+        stock,
+        category: fields.category.value.trim(),
+        description: fields.desc.value.trim(),
+        images
+      };
+    }
+
+    function buildOzonPayload() {
+      const p = getCommonProductFields();
+      const product = {
+        offer_id: p.sku,
+        name: p.name,
+        brand: p.brand,
+        price: String(p.price.toFixed(2)),
+        description: p.description,
+        images: p.images.map((url) => ({ file_name: url })),
+        attributes: [],
+        barcode: "",
+        old_price: "",
+        premium_price: "",
+        vat: "0"
+      };
+
+      const payload = { items: [product] };
+      const endpoint = "https://api-seller.ozon.ru/v2/product/import";
+      const headers = {
+        "Client-Id": fields.ozonClientId.value.trim() || "<CLIENT_ID>",
+        "Api-Key": fields.ozonApiKey.value.trim() || "<API_KEY>",
+        "Content-Type": "application/json"
+      };
+
+      return { endpoint, method: "POST", headers, body: payload };
+    }
+
+    function buildWbPayload() {
+      const p = getCommonProductFields();
+      const product = {
+        vendorCode: p.sku,
+        brand: p.brand,
+        title: p.name,
+        description: p.description,
+        sizes: [
+          {
+            skus: [p.sku],
+            price: p.price,
+            stocks: [{ warehouseId: 0, quantity: p.stock }]
+          }
+        ],
+        mediaFiles: p.images
+      };
+
+      const payload = [product];
+      const endpoint = "https://suppliers-api.wildberries.ru/content/v2/cards/upload";
+      const headers = {
+        "X-API-Key": fields.wbApiKey.value.trim() || "<WB_API_KEY>",
+        "Content-Type": "application/json"
+      };
+
+      return { endpoint, method: "POST", headers, body: payload };
+    }
+
+    function buildPayload() {
+      const p = getCommonProductFields();
+      if (!p.sku || !p.name) {
+        log("error", "Не заполнены обязательные поля: артикул и название товара");
+        return null;
+      }
+
+      const results = [];
+
+      if (state.marketplace === "ozon" || state.marketplace === "both") {
+        const ozonPayload = buildOzonPayload();
+        results.push({
+          marketplace: "OZON",
+          ...ozonPayload
+        });
+        log(
+          "request",
+          `Сформирован payload для OZON`,
+          {
+            endpoint: ozonPayload.endpoint,
+            method: ozonPayload.method,
+            headers: ozonPayload.headers,
+            body: ozonPayload.body
+          }
+        );
+      }
+
+      if (state.marketplace === "wb" || state.marketplace === "both") {
+        const wbPayload = buildWbPayload();
+        results.push({
+          marketplace: "WILDBERRIES",
+          ...wbPayload
+        });
+        log(
+          "request",
+          `Сформирован payload для WILDBERRIES`,
+          {
+            endpoint: wbPayload.endpoint,
+            method: wbPayload.method,
+            headers: wbPayload.headers,
+            body: wbPayload.body
+          }
+        );
+      }
+
+      state.lastPayload = results;
+      rebuildMetrics();
+      return results;
+    }
+
+    function sendRequest() {
+      if (state.env !== "prod") {
+        log(
+          "error",
+          "Отправка запросов доступна только в режиме Prod. Сейчас выбран sandbox."
+        );
+        return;
+      }
+
+      const built = state.lastPayload || buildPayload();
+      if (!built) return;
+
+      log(
+        "info",
+        "В демо‑версии HTTP‑запрос не отправляется. В боевой версии здесь нужно использовать Python (requests/asyncio) или backend."
+      );
+    }
+
+    function rebuildMetrics() {
+      const p = getCommonProductFields();
+      const price = p.price || 0;
+      const stock = p.stock || 0;
+
+      const avgPriceOzon = price * 0.95 || 1000;
+      const avgPriceWb = price * 0.9 || 950;
+
+      priceMetricsEl.innerHTML = "";
+      stockMetricsEl.innerHTML = "";
+
+      const priceItems = [
+        { label: "Цена текущего товара", value: price ? price.toFixed(2) + " ₽" : "—" },
+        { label: "Средняя цена Ozon (условно)", value: avgPriceOzon.toFixed(2) + " ₽" },
+        { label: "Средняя цена WB (условно)", value: avgPriceWb.toFixed(2) + " ₽" }
+      ];
+
+      priceItems.forEach((m) => {
+        const div = document.createElement("div");
+        div.className = "metric";
+        div.innerHTML =
+          '<span class="metric-label">' + m.label + "</span>" +
+          '<span class="metric-value">' + m.value + "</span>";
+        priceMetricsEl.appendChild(div);
+      });
+
+      const revenue = price * stock;
+      const marketplaceDisplay = state.marketplace === "both" ? "ОБА" : state.marketplace.toUpperCase();
+      const stockItems = [
+        { label: "Остаток", value: stock ? stock.toString() + " шт" : "—" },
+        { label: "Потенциальная выручка", value: revenue ? revenue.toFixed(2) + " ₽" : "—" },
+        { label: "Маркетплейс", value: marketplaceDisplay }
+      ];
+
+      stockItems.forEach((m) => {
+        const div = document.createElement("div");
+        div.className = "metric";
+        div.innerHTML =
+          '<span class="metric-label">' + m.label + "</span>" +
+          '<span class="metric-value">' + m.value + "</span>";
+        stockMetricsEl.appendChild(div);
+      });
+    }
+
+    function init() {
+      mpOzonBtn.addEventListener("click", () => {
+        state.marketplace = "ozon";
+        updateMarketplaceUI();
+      });
+      mpWbBtn.addEventListener("click", () => {
+        state.marketplace = "wb";
+        updateMarketplaceUI();
+      });
+      mpBothBtn.addEventListener("click", () => {
+        state.marketplace = "both";
+        updateMarketplaceUI();
+      });
+      envSelect.addEventListener("change", updateEnv);
+
+      btnBuildPayload.addEventListener("click", buildPayload);
+      btnSend.addEventListener("click", sendRequest);
+      btnClearLog.addEventListener("click", () => {
+        logEl.innerHTML = "";
+        log("info", "Лог очищен");
+      });
+
+      ["ozonClientId", "ozonApiKey", "wbApiKey"].forEach((k) => {
+        fields[k].addEventListener("input", () => {
+          const hasOzon = !!fields.ozonClientId.value.trim() && !!fields.ozonApiKey.value.trim();
+          const hasWb = !!fields.wbApiKey.value.trim();
+
+          if (hasOzon || hasWb) {
+            connStatus.className = "status";
+            connStatus.innerHTML =
+              '<span class="status-dot"></span>' +
+              (hasOzon && hasWb
+                ? "ключи Ozon и WB заданы"
+                : hasOzon
+                ? "заданы ключи Ozon"
+                : "задан ключ WB");
+          } else {
+            connStatus.className = "status status-warning";
+            connStatus.innerHTML =
+              '<span class="status-dot"></span> токены не заданы';
+          }
+        });
+      });
+
+      ["price", "stock"].forEach((id) => {
+        fields[id].addEventListener("input", rebuildMetrics);
+      });
+
+      updateMarketplaceUI();
+      updateEnv();
+      rebuildMetrics();
+
+      log(
+        "info",
+        "Готово. Выбери маркетплейс, заполни карточку и нажми «Сформировать payload»."
+      );
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
