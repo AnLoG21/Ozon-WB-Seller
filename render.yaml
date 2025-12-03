@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: marketplace-api-manager
+    runtime: python
+    pythonVersion: 3.11
+    
+    # Build
+    buildCommand: pip install -r requirements.txt
+    
+    # Start command
+    startCommand: python start-server.py
+    
+    # Переменные окружения
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: ENV
+        value: "sandbox"
+      - key: BACKEND_HOST
+        value: "0.0.0.0"
+      - key: BACKEND_PORT
+        value: "8000"
+      - key: BACKEND_RELOAD
+        value: "False"
+      - key: CORS_ORIGINS
+        value: '["*"]'
+      - key: OZON_CLIENT_ID
+        scope: project  # Скрытая переменная (вводить вручную)
+      - key: OZON_API_KEY
+        scope: project
+      - key: WB_API_KEY
+        scope: project
+    
+    # Регион
+    region: frankfurt
+    
+    # Масштабирование
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+    
+    # Health check
+    healthCheckPath: /health
+    healthCheckStartupFailureThresholdSeconds: 10
+    
+    # Диски (опционально)
+    # disks:
+    #   - name: data
+    #     mountPath: /data
+    #     sizeGB: 1
