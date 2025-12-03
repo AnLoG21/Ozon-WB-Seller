@@ -10,3 +10,4 @@ python-dotenv==1.0.0
 requests==2.31.0
 aiofiles==23.2.1
 httpx==0.25.2
+PyJWT==2.10.0

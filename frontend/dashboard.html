@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace Manager v3.2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .user-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .dropdown-menu.active {
+            display: block;
+        }
+
+        .dropdown-menu a,
+        .dropdown-menu button {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .dropdown-menu a:hover,
+        .dropdown-menu button:hover {
+            background: #f0f0f0;
+        }
+
+        .dropdown-menu button {
+            color: #e74c3c;
+            border-top: 1px solid #ddd;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #ddd;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab-button.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .marketplace-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .marketplace-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .marketplace-btn.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .marketplace-btn:nth-child(1) {
+            color: #2185d0;
+        }
+
+        .marketplace-btn:nth-child(2) {
+            color: #e12e00;
+        }
+
+        .product-form {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+
+        .product-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .media-item {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .media-number {
+            min-width: 2rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .media-item input {
+            flex: 1;
+        }
+
+        .media-item button {
+            padding: 0.5rem 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .profile-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+
+        .profile-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .profile-field:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            font-weight: 600;
+        }
+
+        .profile-value {
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .marketplace-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🏪 Marketplace Manager v3.2</h1>
+        <div class="user-menu">
+            <button class="user-button" id="userBtn">👤 <span id="username">User</span> ▼</button>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <button onclick="switchTab('profile')">👤 Профиль</button>
+                <button onclick="logout()" style="border-top: 1px solid #ddd; color: #e74c3c;">🚪 Выход</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('create')">➕ Создать товар</button>
+            <button class="tab-button" onclick="switchTab('profile')">👤 Профиль</button>
+            <button class="tab-button" onclick="switchTab('history')">📜 История</button>
+        </div>
+
+        <!-- TAB: Создать товар -->
+        <div id="create" class="tab-content active">
+            <div class="card">
+                <h2>Создание товара</h2>
+                
+                <!-- Marketplace Selector -->
+                <div class="marketplace-selector">
+                    <button class="marketplace-btn active" onclick="setMarketplace('ozon')">
+                        🔵 Ozon
+                    </button>
+                    <button class="marketplace-btn" onclick="setMarketplace('wildberries')">
+                        🔴 Wildberries
+                    </button>
+                </div>
+
+                <!-- Upload to Both Checkbox -->
+                <div class="checkbox-group">
+                    <input type="checkbox" id="uploadBoth" onchange="toggleUploadBoth()">
+                    <label for="uploadBoth">Загрузить в оба маркетплейса одновременно</label>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <!-- Products Container -->
+                <div id="productsContainer"></div>
+
+                <!-- Add Product Button -->
+                <button class="btn btn-secondary" onclick="addProduct()">
+                    ➕ Добавить еще товар
+                </button>
+
+                <!-- Submit Button -->
+                <button class="btn btn-primary btn-large" onclick="submitProducts()" style="margin-top: 2rem; width: 100%; padding: 1rem;">
+                    🚀 Загрузить все товары
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB: Профиль -->
+        <div id="profile" class="tab-content">
+            <div class="card">
+                <h2>Профиль пользователя</h2>
+                
+                <!-- User Info -->
+                <div class="profile-section">
+                    <div class="profile-field">
+                        <span class="profile-label">Имя пользователя:</span>
+                        <span class="profile-value" id="profileUsername">-</span>
+                    </div>
+                </div>
+
+                <!-- API Keys Section -->
+                <div style="margin-top: 2rem;">
+                    <h3>🔑 API Ключи</h3>
+
+                    <!-- Ozon Keys -->
+                    <div style="margin-top: 1.5rem;">
+                        <h4 style="color: #2185d0; margin-bottom: 1rem;">🔵 Ozon API Ключи</h4>
+                        <div class="form-group">
+                            <label class="form-label">Client ID</label>
+                            <input type="text" id="ozonClientId" class="form-input" placeholder="Введи Ozon Client ID">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" id="ozonApiKey" class="form-input" placeholder="Введи Ozon API Key">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveOzonKeys()">💾 Сохранить Ozon ключи</button>
+                    </div>
+
+                    <!-- Wildberries Keys -->
+                    <div style="margin-top: 2rem;">
+                        <h4 style="color: #e12e00; margin-bottom: 1rem;">🔴 Wildberries API Ключ</h4>
+                        <div class="form-group">
+                            <label class="form-label">API Key</label>
+                            <input type="password" id="wbApiKey" class="form-input" placeholder="Введи Wildberries API Key">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveWbKeys()">💾 Сохранить WB ключ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: История -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <h2>История загрузок</h2>
+                <div id="historyContainer">
+                    <p style="color: #999; text-align: center;">История загрузок появится здесь</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api';
+        let token = localStorage.getItem('access_token');
+        let currentMarketplace = 'ozon';
+        let uploadBoth = false;
+        let products = [{}];
+
+        // ===== AUTH CHECK =====
+        if (!token) {
+            window.location.href = '/index.html';
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsername();
+            renderProducts();
+            setupUserMenu();
+        });
+
+        function loadUsername() {
+            try {
+                const tokenData = JSON.parse(atob(token.split('.')[1]));
+                const username = tokenData.username;
+                document.getElementById('username').textContent = username;
+                document.getElementById('profileUsername').textContent = username;
+            } catch (e) {
+                console.error('Token parse error:', e);
+                localStorage.removeItem('access_token');
+                window.location.href = '/index.html';
+            }
+        }
+
+        function setupUserMenu() {
+            document.getElementById('userBtn').addEventListener('click', () => {
+                document.getElementById('dropdownMenu').classList.toggle('active');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.user-menu')) {
+                    document.getElementById('dropdownMenu').classList.remove('active');
+                }
+            });
+        }
+
+        // ===== TABS =====
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            
+            // Find and activate the corresponding button
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                if (btn.textContent.includes(
+                    tab === 'create' ? 'Создать' : 
+                    tab === 'profile' ? 'Профиль' : 
+                    'История'
+                )) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            document.getElementById('dropdownMenu').classList.remove('active');
+        }
+
+        // ===== MARKETPLACE =====
+        function setMarketplace(marketplace) {
+            currentMarketplace = marketplace;
+            document.querySelectorAll('.marketplace-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', (i === 0 && marketplace === 'ozon') || (i === 1 && marketplace === 'wildberries'));
+            });
+            renderProducts();
+        }
+
+        function toggleUploadBoth() {
+            uploadBoth = document.getElementById('uploadBoth').checked;
+        }
+
+        // ===== PRODUCTS =====
+        function addProduct() {
+            products.push({});
+            renderProducts();
+        }
+
+        function removeProduct(index) {
+            products.splice(index, 1);
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = products.map((product, i) => `
+                <div class="product-form">
+                    <div class="product-number">${i + 1}️⃣ Товар ${i + 1}</div>
+                    ${i > 0 ? `<button class="btn btn-danger btn-small remove-btn" onclick="removeProduct(${i})">❌ Удалить</button>` : ''}
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">SKU / Offer ID *</label>
+                            <input type="text" class="form-input product-field" data-index="${i}" data-field="offer_id" placeholder="SKU001">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Название товара *</label>
+                            <input type="text" class="form-input product-field" data-index="${i}" data-field="name" placeholder="Название товара">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Бренд</label>
+                            <input type="text" class="form-input product-field" data-index="${i}" data-field="brand" placeholder="Бренд">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Цена (руб)</label>
+                            <input type="number" class="form-input product-field" data-index="${i}" data-field="price" placeholder="5000">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Остаток</label>
+                            <input type="number" class="form-input product-field" data-index="${i}" data-field="stock" placeholder="100">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Штрихкод</label>
+                            <input type="text" class="form-input product-field" data-index="${i}" data-field="barcode" placeholder="4606400111111">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Описание</label>
+                        <textarea class="form-textarea product-field" data-index="${i}" data-field="description" rows="4" placeholder="Описание товара"></textarea>
+                    </div>
+
+                    <!-- Media Section for Current Marketplace -->
+                    ${renderMediaSection(i)}
+                </div>
+            `).join('');
+
+            // Attach event listeners
+            document.querySelectorAll('.product-field').forEach(el => {
+                el.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const field = e.target.dataset.field;
+                    if (!products[index]) products[index] = {};
+                    products[index][field] = e.target.value;
+                });
+            });
+        }
+
+        function renderMediaSection(i) {
+            if (currentMarketplace === 'ozon') {
+                return `
+                    <hr style="margin: 1.5rem 0;">
+                    <h4>📸 Картинки и Видео (Ozon)</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Картинки (до 30, по одной ссылке на строку)</label>
+                        <div id="ozonImages-${i}"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addOzonImage(${i})">
+                            ➕ Добавить картинку
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Главная картинка (выбери номер)</label>
+                        <select class="form-select product-field" data-index="${i}" data-field="primary_image">
+                            <option value="">Первая автоматически</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Видео YouTube</label>
+                        <input type="text" class="form-input product-field" data-index="${i}" data-field="video_url" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                `;
+            } else {
+                return `
+                    <hr style="margin: 1.5rem 0;">
+                    <h4>📸 Картинки и Видео (Wildberries)</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Картинки (до 30, по одной ссылке на строку, 700x900px, макс 32Mb)</label>
+                        <div id="wbImages-${i}"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addWbImage(${i})">
+                            ➕ Добавить картинку
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Видео (MOV или MP4, макс 50Mb)</label>
+                        <input type="text" class="form-input product-field" data-index="${i}" data-field="wb_video" placeholder="https://example.com/video.mp4">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">SKU WB (артикул)</label>
+                        <input type="text" class="form-input product-field" data-index="${i}" data-field="wb_sku" placeholder="WB123456">
+                    </div>
+                `;
+            }
+        }
+
+        function addOzonImage(index) {
+            if (!products[index].images) products[index].images = [];
+            products[index].images.push('');
+            renderImageFields(index, 'ozon');
+        }
+
+        function addWbImage(index) {
+            if (!products[index].wb_images) products[index].wb_images = [];
+            products[index].wb_images.push('');
+            renderImageFields(index, 'wb');
+        }
+
+        function renderImageFields(index, marketplace) {
+            const images = marketplace === 'ozon' ? (products[index].images || []) : (products[index].wb_images || []);
+            const container = document.getElementById(`${marketplace}Images-${index}`);
+            
+            container.innerHTML = images.map((img, i) => `
+                <div class="media-item">
+                    <span class="media-number">${i + 1}️⃣</span>
+                    <input type="text" class="form-input" value="${img}" 
+                        onchange="updateImage(${index}, ${i}, this.value, '${marketplace}')"
+                        placeholder="https://example.com/image${i + 1}.jpg">
+                    <button type="button" class="btn btn-danger btn-small" onclick="removeImage(${index}, ${i}, '${marketplace}')">
+                        ❌
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function updateImage(index, imageIndex, value, marketplace) {
+            const field = marketplace === 'ozon' ? 'images' : 'wb_images';
+            if (!products[index][field]) products[index][field] = [];
+            products[index][field][imageIndex] = value;
+        }
+
+        function removeImage(index, imageIndex, marketplace) {
+            const field = marketplace === 'ozon' ? 'images' : 'wb_images';
+            if (products[index][field]) {
+                products[index][field].splice(imageIndex, 1);
+                renderImageFields(index, marketplace);
+            }
+        }
+
+        // ===== API KEYS =====
+        async function saveOzonKeys() {
+            const clientId = document.getElementById('ozonClientId').value;
+            const apiKey = document.getElementById('ozonApiKey').value;
+
+            if (!clientId || !apiKey) {
+                showAlert('Заполни оба поля', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/keys/save?marketplace=ozon`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ client_id: clientId, api_key: apiKey })
+                });
+
+                if (response.ok) {
+                    showAlert('✅ Ozon ключи сохранены', 'success');
+                    document.getElementById('ozonClientId').value = '';
+                    document.getElementById('ozonApiKey').value = '';
+                } else {
+                    showAlert('❌ Ошибка при сохранении', 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        async function saveWbKeys() {
+            const apiKey = document.getElementById('wbApiKey').value;
+
+            if (!apiKey) {
+                showAlert('Заполни API Key', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/keys/save?marketplace=wildberries`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+
+                if (response.ok) {
+                    showAlert('✅ WB ключ сохранен', 'success');
+                    document.getElementById('wbApiKey').value = '';
+                } else {
+                    showAlert('❌ Ошибка при сохранении', 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        // ===== SUBMIT =====
+        async function submitProducts() {
+            // Validate
+            for (let p of products) {
+                if (!p.offer_id || !p.name) {
+                    showAlert('Заполни SKU и Название для всех товаров', 'error');
+                    return;
+                }
+            }
+
+            // Submit to both or one
+            const marketplaces = uploadBoth ? ['ozon', 'wildberries'] : [currentMarketplace];
+
+            for (let marketplace of marketplaces) {
+                await submitToMarketplace(marketplace);
+            }
+        }
+
+        async function submitToMarketplace(marketplace) {
+            try {
+                const endpoint = marketplace === 'ozon' 
+                    ? `${API_URL}/ozon/products/batch`
+                    : `${API_URL}/wb/products/batch`;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ products })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAlert(`✅ ${marketplace.toUpperCase()}: Загружено ${data.total} товаров`, 'success');
+                    products = [{}];
+                    renderProducts();
+                } else {
+                    const error = await response.json();
+                    showAlert(`❌ ${marketplace.toUpperCase()}: ${error.detail}`, 'error');
+                }
+            } catch (e) {
+                showAlert(`❌ Ошибка ${marketplace}: ${e.message}`, 'error');
+            }
+        }
+
+        // ===== UTILS =====
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            container.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>
