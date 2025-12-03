@@ -5,99 +5,240 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ozon & Wildberries Product Manager</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    /* Additional styles for v2 */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-base);
+      min-width: 200px;
+      box-shadow: var(--shadow-md);
+      z-index: 1000;
+      margin-top: 4px;
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .dropdown-menu button {
+      display: block;
+      width: 100%;
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      color: var(--color-text);
+      font-size: 14px;
+      transition: background-color var(--duration-fast);
+    }
+
+    .dropdown-menu button:hover {
+      background-color: var(--color-secondary);
+    }
+
+    .dropdown-menu button:first-child {
+      border-radius: var(--radius-base) var(--radius-base) 0 0;
+    }
+
+    .dropdown-menu button:last-child {
+      border-radius: 0 0 var(--radius-base) var(--radius-base);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      position: relative;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .product-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      background: var(--color-surface);
+    }
+
+    .product-card h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+    }
+
+    .product-info {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    .product-info strong {
+      color: var(--color-text);
+    }
+
+    .product-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .product-actions button {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--color-text);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <header class="header-main">
       <div class="header-title">
         <h1>Ozon & Wildberries Product Manager</h1>
-        <small>
-          Создание и редактирование карточек товаров через API.
-          Безопасные тестовые запросы + визуализация.
-        </small>
+        <small>Управление карточками товаров с реальными API методами</small>
       </div>
       <div class="flex-row">
+        <div class="action-buttons">
+          <button id="action-menu-btn" class="btn btn-secondary" type="button">
+            📋 Действия ▼
+          </button>
+          <div id="action-menu" class="dropdown-menu">
+            <button id="action-create" type="button">➕ Создать товар</button>
+            <button id="action-my-products" type="button">📦 Мои товары</button>
+            <button id="action-payloads" type="button">📄 История payload'ов</button>
+          </div>
+        </div>
         <div class="pill-toggle" aria-label="Маркетплейс">
           <button id="mp-ozon" type="button" class="active">Ozon</button>
           <button id="mp-wb" type="button">Wildberries</button>
           <button id="mp-both" type="button">Оба 🔗</button>
         </div>
-        <span class="badge" title="Фейковые запросы, только формирование payload">
-          <span class="badge-dot"></span> sandbox mode
+        <span class="badge" title="Работает с реальными API">
+          <span class="badge-dot"></span> live mode
         </span>
       </div>
     </header>
 
     <main class="layout">
-      <!-- LEFT: CONFIG + PRODUCT FORM -->
-      <section>
+      <!-- TAB 1: СОЗДАНИЕ ТОВАРА -->
+      <section id="tab-create" class="tab-content active">
         <div class="card">
           <div class="api-section-title">
-            <h2>API настройки</h2>
+            <h2>API ключи</h2>
             <span id="conn-status" class="status status-warning">
-              <span class="status-dot"></span> токены не заданы
+              <span class="status-dot"></span> не заполнены
             </span>
           </div>
 
           <div class="form-row">
             <div>
               <label for="ozon-client-id">Ozon Client ID</label>
-              <input id="ozon-client-id" class="input" type="text" autocomplete="off"
-                     placeholder="client_id из кабинета Ozon" />
+              <input id="ozon-client-id" class="input" type="text" placeholder="Client ID" />
             </div>
             <div>
               <label for="ozon-api-key">Ozon API Key</label>
-              <input id="ozon-api-key" class="input" type="password" autocomplete="off"
-                     placeholder="API ключ Ozon" />
+              <input id="ozon-api-key" class="input" type="password" placeholder="API Key" />
             </div>
           </div>
 
           <div class="form-row">
             <div>
               <label for="wb-api-key">Wildberries API Key</label>
-              <input id="wb-api-key" class="input" type="password" autocomplete="off"
-                     placeholder="API ключ WB (X-API-Key)" />
-            </div>
-            <div>
-              <label for="env-select">Среда</label>
-              <select id="env-select">
-                <option value="sandbox" selected>Sandbox (только генерация payload)</option>
-                <option value="prod">Prod (отправка запросов — требуются реальные ключи)</option>
-              </select>
+              <input id="wb-api-key" class="input" type="password" placeholder="API Key" />
             </div>
           </div>
 
           <p class="hint">
-            В режиме <b>Sandbox</b> приложение не делает HTTP‑запросы, а только показывает,
-            как будет выглядеть тело запроса к API.
+            ⚠️ <b>ВАЖНО:</b> Ключи хранятся только в браузере и не отправляются на сервер.
+            Вводите реальные ключи для работы с API.
           </p>
         </div>
 
-        <div class="card" style="margin-top: 16px;">
+        <div class="card">
           <div class="api-section-title">
-            <h2>Карточка товара</h2>
+            <h2>Новый товар</h2>
             <span id="operation-label" class="badge">
-              <span class="badge-dot"></span>
-              Создание / обновление
+              <span class="badge-dot"></span> Создание
             </span>
           </div>
 
           <div class="form-row">
             <div>
-              <label for="sku">Артикул (offer_id / vendorCode)</label>
-              <input id="sku" class="input" type="text" placeholder="Уникальный ID товара" />
+              <label for="sku">Артикул (SKU)</label>
+              <input id="sku" class="input" type="text" placeholder="Уникальный ID" />
             </div>
             <div>
-              <label for="name">Название товара</label>
-              <input id="name" class="input" type="text"
-                     placeholder="Тип + бренд + модель + ключевая характеристика" />
+              <label for="name">Название</label>
+              <input id="name" class="input" type="text" placeholder="Название товара" />
             </div>
           </div>
 
           <div class="form-row">
             <div>
               <label for="brand">Бренд</label>
-              <input id="brand" class="input" type="text" placeholder="например, Apple" />
+              <input id="brand" class="input" type="text" placeholder="Бренд" />
             </div>
             <div>
               <label for="price">Цена, ₽</label>
@@ -111,138 +252,205 @@
               <input id="stock" class="input" type="number" step="1" min="0" />
             </div>
             <div>
-              <label for="category">Категория (условно)</label>
-              <input id="category" class="input" type="text"
-                     placeholder="для Ozon/WB нужно будет подставить ID дерева категорий" />
+              <label for="barcode">Штрихкод</label>
+              <input id="barcode" class="input" type="text" placeholder="Опционально" />
             </div>
           </div>
 
           <div class="form-row">
             <div>
               <label for="desc">Описание</label>
-              <textarea id="desc"
-                        placeholder="Краткое продающее описание товара с ключевыми преимуществами."></textarea>
+              <textarea id="desc" placeholder="Краткое описание товара"></textarea>
             </div>
           </div>
 
           <div class="form-row">
             <div>
-              <label for="images">Ссылки на изображения (через запятую)</label>
-              <textarea id="images"
-                        placeholder="https://..., https://..."></textarea>
+              <label for="images">Ссылки на изображения (одна на строку)</label>
+              <textarea id="images" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
             </div>
           </div>
 
           <div class="btn-group">
-            <button id="btn-build-payload" class="btn" type="button">
-              Сформировать payload
+            <button id="btn-create-local" class="btn" type="button">
+              📋 Генерировать payload
             </button>
-            <button id="btn-send" class="btn btn-secondary" type="button">
-              Отправить в API (Prod)
+            <button id="btn-send-api" class="btn btn-secondary" type="button">
+              🚀 Отправить в API
             </button>
           </div>
-
-          <p class="hint">
-            Для реальной интеграции тебе нужно будет взять из документации
-            конкретные методы: для Ozon, например,
-            <code>/v2/product/import</code> (создание/обновление товаров),
-            для WB — методы из раздела <b>Product Management</b>.
-          </p>
         </div>
-      </section>
 
-      <!-- RIGHT: LOG + VISUALIZATION -->
-      <section>
         <div class="card">
           <div class="api-section-title">
-            <h2>Лог запросов</h2>
+            <h2>Лог</h2>
             <button id="btn-clear-log" type="button" class="btn btn-secondary" style="font-size: 11px;">
-              Очистить лог
+              Очистить
             </button>
           </div>
           <div id="log" class="log" aria-live="polite"></div>
         </div>
+      </section>
 
+      <!-- TAB 2: МОИ ТОВАРЫ -->
+      <section id="tab-my-products" class="tab-content">
         <div class="card">
-          <h2>Визуализация</h2>
-          <div class="charts">
-            <div class="chart-box">
-              <div class="chart-placeholder"></div>
-              <h3>Распределение цен по маркетплейсам</h3>
-              <div class="chart-caption">
-                Псевдо‑диаграмма: текущее значение цены и условные средние по Ozon/WB.
-              </div>
-              <div class="metrics-row" id="price-metrics">
-                <!-- заполняется JS -->
-              </div>
-            </div>
-
-            <div class="chart-box">
-              <div class="chart-placeholder"></div>
-              <h3>Остатки и потенциальный оборот</h3>
-              <div class="chart-caption">
-                Оценка возможного выручки = цена × остаток (простейшая визуализация).
-              </div>
-              <div class="metrics-row" id="stock-metrics">
-                <!-- заполняется JS -->
-              </div>
-            </div>
+          <div class="api-section-title">
+            <h2>Мои товары</h2>
+            <button id="btn-refresh-products" class="btn btn-secondary" type="button" style="font-size: 11px;">
+              🔄 Обновить
+            </button>
           </div>
 
-          <p class="hint" style="margin-top: 10px;">
-            Здесь можно дальше прикрутить настоящие графики (Plotly / Chart.js) и реальные данные
-            по продажам из аналитических методов Ozon/WB.
-          </p>
+          <div id="products-container">
+            <p class="hint">Загрузка товаров...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ИСТОРИЯ PAYLOAD'ОВ -->
+      <section id="tab-payloads" class="tab-content">
+        <div class="card">
+          <div class="api-section-title">
+            <h2>История генерированных payload'ов</h2>
+            <button id="btn-clear-payloads" class="btn btn-secondary" type="button" style="font-size: 11px;">
+              Очистить историю
+            </button>
+          </div>
+
+          <div id="payloads-container">
+            <p class="hint">История пуста</p>
+          </div>
         </div>
       </section>
     </main>
 
     <footer>
-      Приложение демонстрирует структуру интеграции: подготовку payload, базовую валидацию и визуализацию.
-      Для боевой версии нужно добавить реальные HTTP‑запросы (например, через <code>requests</code> в Python backend
-      или через отдельный сервис).
+      Версия 2.0 с реальными API методами. 
+      <a href="http://127.0.0.1:8000/docs" target="_blank">API Docs (Swagger)</a>
     </footer>
   </div>
 
+  <!-- MODAL для редактирования товара -->
+  <div id="modal-edit" class="modal-overlay">
+    <div class="modal">
+      <button class="modal-close" onclick="closeEditModal()">×</button>
+      <div class="modal-header">Редактировать товар</div>
+      
+      <div class="form-row">
+        <div>
+          <label for="modal-name">Название</label>
+          <input id="modal-name" class="input" type="text" />
+        </div>
+        <div>
+          <label for="modal-price">Цена</label>
+          <input id="modal-price" class="input" type="number" step="0.01" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="modal-stock">Остаток</label>
+          <input id="modal-stock" class="input" type="number" step="1" />
+        </div>
+        <div>
+          <label for="modal-barcode">Штрихкод</label>
+          <input id="modal-barcode" class="input" type="text" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label for="modal-desc">Описание</label>
+          <textarea id="modal-desc"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-save-changes" class="btn" type="button">💾 Сохранить</button>
+        <button class="btn btn-secondary" type="button" onclick="closeEditModal()">Отмена</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Состояние
+    // ======================== STATE ========================
+
     const state = {
       marketplace: "ozon",
-      env: "sandbox",
-      lastPayload: null
+      apiKeys: {
+        ozonClientId: "",
+        ozonApiKey: "",
+        wbApiKey: ""
+      },
+      payloadHistory: [],
+      currentEditProduct: null
     };
+
+    // ======================== DOM ========================
 
     const $ = (id) => document.getElementById(id);
 
-    const mpOzonBtn = $("mp-ozon");
-    const mpWbBtn = $("mp-wb");
-    const mpBothBtn = $("mp-both");
-    const envSelect = $("env-select");
-    const connStatus = $("conn-status");
-    const logEl = $("log");
-    const priceMetricsEl = $("price-metrics");
-    const stockMetricsEl = $("stock-metrics");
-    const btnBuildPayload = $("btn-build-payload");
-    const btnSend = $("btn-send");
-    const btnClearLog = $("btn-clear-log");
+    const elements = {
+      // Menu
+      actionMenuBtn: $("action-menu-btn"),
+      actionMenu: $("action-menu"),
+      actionCreate: $("action-create"),
+      actionMyProducts: $("action-my-products"),
+      actionPayloads: $("action-payloads"),
 
-    const fields = {
+      // Tabs
+      tabCreate: $("tab-create"),
+      tabMyProducts: $("tab-my-products"),
+      tabPayloads: $("tab-payloads"),
+
+      // API Keys
+      ozonClientId: $("ozon-client-id"),
+      ozonApiKey: $("ozon-api-key"),
+      wbApiKey: $("wb-api-key"),
+      connStatus: $("conn-status"),
+
+      // Form
       sku: $("sku"),
       name: $("name"),
       brand: $("brand"),
       price: $("price"),
       stock: $("stock"),
-      category: $("category"),
+      barcode: $("barcode"),
       desc: $("desc"),
       images: $("images"),
-      ozonClientId: $("ozon-client-id"),
-      ozonApiKey: $("ozon-api-key"),
-      wbApiKey: $("wb-api-key")
+
+      // Buttons
+      btnCreateLocal: $("btn-create-local"),
+      btnSendApi: $("btn-send-api"),
+      btnClearLog: $("btn-clear-log"),
+      btnRefreshProducts: $("btn-refresh-products"),
+      btnClearPayloads: $("btn-clear-payloads"),
+
+      // Containers
+      log: $("log"),
+      productsContainer: $("products-container"),
+      payloadsContainer: $("payloads-container"),
+
+      // Marketplace
+      mpOzon: $("mp-ozon"),
+      mpWb: $("mp-wb"),
+      mpBoth: $("mp-both"),
+
+      // Modal
+      modalEdit: $("modal-edit"),
+      modalName: $("modal-name"),
+      modalPrice: $("modal-price"),
+      modalStock: $("modal-stock"),
+      modalBarcode: $("modal-barcode"),
+      modalDesc: $("modal-desc"),
+      btnSaveChanges: $("btn-save-changes")
     };
 
+    // ======================== HELPERS ========================
+
     function nowTime() {
-      const d = new Date();
-      return d.toISOString().split("T")[1].split(".")[0];
+      return new Date().toISOString().split("T")[1].split(".")[0];
     }
 
     function log(level, message, payload) {
@@ -254,14 +462,9 @@
       timeSpan.textContent = "[" + nowTime() + "]";
 
       const levelSpan = document.createElement("span");
-      const levelClass =
-        level === "error" ? "level-error" :
-        level === "request" ? "level-request" :
-        "level-info";
+      const levelClass = level === "error" ? "level-error" : level === "request" ? "level-request" : "level-info";
       levelSpan.className = levelClass;
-      levelSpan.textContent =
-        level === "error" ? "ERROR" :
-        level === "request" ? "REQ" : "INFO";
+      levelSpan.textContent = level === "error" ? "ERROR" : level === "request" ? "REQ" : "INFO";
 
       const msgSpan = document.createElement("span");
       msgSpan.textContent = " " + message;
@@ -273,287 +476,331 @@
       if (payload) {
         const pre = document.createElement("pre");
         pre.style.marginTop = "2px";
-        pre.style.whiteSpace = "pre-wrap";
         pre.textContent = JSON.stringify(payload, null, 2);
         div.appendChild(pre);
       }
 
-      logEl.appendChild(div);
-      logEl.scrollTop = logEl.scrollHeight;
+      elements.log.appendChild(div);
+      elements.log.scrollTop = elements.log.scrollHeight;
     }
 
-    function updateMarketplaceUI() {
-      mpOzonBtn.classList.remove("active");
-      mpWbBtn.classList.remove("active");
-      mpBothBtn.classList.remove("active");
+    function showTab(tabId) {
+      // Hide all tabs
+      elements.tabCreate.classList.remove("active");
+      elements.tabMyProducts.classList.remove("active");
+      elements.tabPayloads.classList.remove("active");
 
-      if (state.marketplace === "ozon") {
-        mpOzonBtn.classList.add("active");
-      } else if (state.marketplace === "wb") {
-        mpWbBtn.classList.add("active");
-      } else if (state.marketplace === "both") {
-        mpBothBtn.classList.add("active");
+      // Show selected tab
+      if (tabId === "create") elements.tabCreate.classList.add("active");
+      else if (tabId === "products") elements.tabMyProducts.classList.add("active");
+      else if (tabId === "payloads") elements.tabPayloads.classList.add("active");
+
+      // Close menu
+      elements.actionMenu.classList.remove("active");
+    }
+
+    function updateApiKeyStatus() {
+      state.apiKeys.ozonClientId = elements.ozonClientId.value.trim();
+      state.apiKeys.ozonApiKey = elements.ozonApiKey.value.trim();
+      state.apiKeys.wbApiKey = elements.wbApiKey.value.trim();
+
+      const hasOzon = state.apiKeys.ozonClientId && state.apiKeys.ozonApiKey;
+      const hasWb = state.apiKeys.wbApiKey;
+
+      if (hasOzon || hasWb) {
+        elements.connStatus.className = "status";
+        elements.connStatus.innerHTML = '<span class="status-dot"></span>' +
+          (hasOzon && hasWb ? "Ozon ✓ WB ✓" : hasOzon ? "Ozon ✓" : "WB ✓");
+      } else {
+        elements.connStatus.className = "status status-warning";
+        elements.connStatus.innerHTML = '<span class="status-dot"></span> не заполнены';
       }
-
-      log("info", "Маркетплейс переключен на " + state.marketplace.toUpperCase());
-      rebuildMetrics();
     }
 
-    function updateEnv() {
-      state.env = envSelect.value;
-      const isSandbox = state.env === "sandbox";
-      const text = isSandbox
-        ? "sandbox: запросы не отправляются"
-        : "prod: возможна отправка запросов (нужны реальные ключи)";
-      const cls = isSandbox ? "status-warning" : "";
-
-      connStatus.className = "status " + cls;
-      connStatus.innerHTML = '<span class="status-dot"></span>' + text;
-      log("info", "Среда: " + state.env);
-    }
-
-    function getCommonProductFields() {
-      const price = parseFloat(fields.price.value) || 0;
-      const stock = parseFloat(fields.stock.value) || 0;
-      const images = fields.images.value
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
+    function getProductData() {
       return {
-        sku: fields.sku.value.trim(),
-        name: fields.name.value.trim(),
-        brand: fields.brand.value.trim(),
-        price,
-        stock,
-        category: fields.category.value.trim(),
-        description: fields.desc.value.trim(),
-        images
+        offer_id: elements.sku.value.trim(),
+        name: elements.name.value.trim(),
+        brand: elements.brand.value.trim(),
+        price: parseFloat(elements.price.value) || 0,
+        stock: parseInt(elements.stock.value) || 0,
+        category: "",
+        description: elements.desc.value.trim(),
+        images: elements.images.value.split("\n").map(s => s.trim()).filter(s => s),
+        barcode: elements.barcode.value.trim() || null
       };
     }
 
-    function buildOzonPayload() {
-      const p = getCommonProductFields();
-      const product = {
-        offer_id: p.sku,
-        name: p.name,
-        brand: p.brand,
-        price: String(p.price.toFixed(2)),
-        description: p.description,
-        images: p.images.map((url) => ({ file_name: url })),
-        attributes: [],
-        barcode: "",
-        old_price: "",
-        premium_price: "",
-        vat: "0"
-      };
+    async function createLocalPayload() {
+      const product = getProductData();
 
-      const payload = { items: [product] };
-      const endpoint = "https://api-seller.ozon.ru/v2/product/import";
-      const headers = {
-        "Client-Id": fields.ozonClientId.value.trim() || "<CLIENT_ID>",
-        "Api-Key": fields.ozonApiKey.value.trim() || "<API_KEY>",
-        "Content-Type": "application/json"
-      };
-
-      return { endpoint, method: "POST", headers, body: payload };
-    }
-
-    function buildWbPayload() {
-      const p = getCommonProductFields();
-      const product = {
-        vendorCode: p.sku,
-        brand: p.brand,
-        title: p.name,
-        description: p.description,
-        sizes: [
-          {
-            skus: [p.sku],
-            price: p.price,
-            stocks: [{ warehouseId: 0, quantity: p.stock }]
-          }
-        ],
-        mediaFiles: p.images
-      };
-
-      const payload = [product];
-      const endpoint = "https://suppliers-api.wildberries.ru/content/v2/cards/upload";
-      const headers = {
-        "X-API-Key": fields.wbApiKey.value.trim() || "<WB_API_KEY>",
-        "Content-Type": "application/json"
-      };
-
-      return { endpoint, method: "POST", headers, body: payload };
-    }
-
-    function buildPayload() {
-      const p = getCommonProductFields();
-      if (!p.sku || !p.name) {
-        log("error", "Не заполнены обязательные поля: артикул и название товара");
-        return null;
-      }
-
-      const results = [];
-
-      if (state.marketplace === "ozon" || state.marketplace === "both") {
-        const ozonPayload = buildOzonPayload();
-        results.push({
-          marketplace: "OZON",
-          ...ozonPayload
-        });
-        log(
-          "request",
-          `Сформирован payload для OZON`,
-          {
-            endpoint: ozonPayload.endpoint,
-            method: ozonPayload.method,
-            headers: ozonPayload.headers,
-            body: ozonPayload.body
-          }
-        );
-      }
-
-      if (state.marketplace === "wb" || state.marketplace === "both") {
-        const wbPayload = buildWbPayload();
-        results.push({
-          marketplace: "WILDBERRIES",
-          ...wbPayload
-        });
-        log(
-          "request",
-          `Сформирован payload для WILDBERRIES`,
-          {
-            endpoint: wbPayload.endpoint,
-            method: wbPayload.method,
-            headers: wbPayload.headers,
-            body: wbPayload.body
-          }
-        );
-      }
-
-      state.lastPayload = results;
-      rebuildMetrics();
-      return results;
-    }
-
-    function sendRequest() {
-      if (state.env !== "prod") {
-        log(
-          "error",
-          "Отправка запросов доступна только в режиме Prod. Сейчас выбран sandbox."
-        );
+      if (!product.offer_id || !product.name) {
+        log("error", "Не заполнены обязательные поля");
         return;
       }
 
-      const built = state.lastPayload || buildPayload();
-      if (!built) return;
+      const payload = {
+        timestamp: new Date().toISOString(),
+        marketplace: state.marketplace,
+        product: product
+      };
 
-      log(
-        "info",
-        "В демо‑версии HTTP‑запрос не отправляется. В боевой версии здесь нужно использовать Python (requests/asyncio) или backend."
-      );
+      state.payloadHistory.unshift(payload);
+
+      if (state.marketplace === "ozon") {
+        log("request", `[OZON] Payload создан для ${product.offer_id}`, {
+          endpoint: "POST /v2/product/import",
+          items: [product]
+        });
+      } else if (state.marketplace === "wb") {
+        log("request", `[WB] Payload создан для ${product.offer_id}`, {
+          endpoint: "POST /content/v2/cards/upload",
+          items: [product]
+        });
+      } else {
+        log("request", `[OZON] Payload создан для ${product.offer_id}`, product);
+        log("request", `[WB] Payload создан для ${product.offer_id}`, product);
+      }
+
+      renderPayloadsHistory();
     }
 
-    function rebuildMetrics() {
-      const p = getCommonProductFields();
-      const price = p.price || 0;
-      const stock = p.stock || 0;
+    async function sendToApi() {
+      const product = getProductData();
+      
+      if (!product.offer_id || !product.name) {
+        log("error", "Не заполнены обязательные поля");
+        return;
+      }
 
-      const avgPriceOzon = price * 0.95 || 1000;
-      const avgPriceWb = price * 0.9 || 950;
+      try {
+        if (state.marketplace === "ozon" || state.marketplace === "both") {
+          if (!state.apiKeys.ozonClientId || !state.apiKeys.ozonApiKey) {
+            log("error", "Не заполнены ключи Ozon");
+            return;
+          }
 
-      priceMetricsEl.innerHTML = "";
-      stockMetricsEl.innerHTML = "";
+          log("info", "Отправка товара в Ozon...");
 
-      const priceItems = [
-        { label: "Цена текущего товара", value: price ? price.toFixed(2) + " ₽" : "—" },
-        { label: "Средняя цена Ozon (условно)", value: avgPriceOzon.toFixed(2) + " ₽" },
-        { label: "Средняя цена WB (условно)", value: avgPriceWb.toFixed(2) + " ₽" }
-      ];
+          const params = new URLSearchParams({
+            client_id: state.apiKeys.ozonClientId,
+            api_key: state.apiKeys.ozonApiKey
+          });
 
-      priceItems.forEach((m) => {
-        const div = document.createElement("div");
-        div.className = "metric";
-        div.innerHTML =
-          '<span class="metric-label">' + m.label + "</span>" +
-          '<span class="metric-value">' + m.value + "</span>";
-        priceMetricsEl.appendChild(div);
-      });
+          const response = await fetch(`/api/ozon/products/create?${params}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(product)
+          });
 
-      const revenue = price * stock;
-      const marketplaceDisplay = state.marketplace === "both" ? "ОБА" : state.marketplace.toUpperCase();
-      const stockItems = [
-        { label: "Остаток", value: stock ? stock.toString() + " шт" : "—" },
-        { label: "Потенциальная выручка", value: revenue ? revenue.toFixed(2) + " ₽" : "—" },
-        { label: "Маркетплейс", value: marketplaceDisplay }
-      ];
+          const result = await response.json();
+          log("request", `[OZON] Ответ: ${result.status}`, result.body || result.error);
+        }
 
-      stockItems.forEach((m) => {
-        const div = document.createElement("div");
-        div.className = "metric";
-        div.innerHTML =
-          '<span class="metric-label">' + m.label + "</span>" +
-          '<span class="metric-value">' + m.value + "</span>";
-        stockMetricsEl.appendChild(div);
-      });
+        if (state.marketplace === "wb" || state.marketplace === "both") {
+          if (!state.apiKeys.wbApiKey) {
+            log("error", "Не заполнены ключи Wildberries");
+            return;
+          }
+
+          log("info", "Отправка товара в Wildberries...");
+
+          const params = new URLSearchParams({
+            api_key: state.apiKeys.wbApiKey
+          });
+
+          const response = await fetch(`/api/wb/products/create?${params}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(product)
+          });
+
+          const result = await response.json();
+          log("request", `[WB] Ответ: ${result.status}`, result.body || result.error);
+        }
+      } catch (e) {
+        log("error", `Ошибка отправки: ${e.message}`);
+      }
     }
+
+    async function loadProducts() {
+      try {
+        log("info", "Загрузка товаров...");
+
+        if (state.marketplace === "ozon") {
+          if (!state.apiKeys.ozonClientId || !state.apiKeys.ozonApiKey) {
+            elements.productsContainer.innerHTML = '<p class="hint">Укажите ключи Ozon в первой вкладке</p>';
+            return;
+          }
+
+          const params = new URLSearchParams({
+            client_id: state.apiKeys.ozonClientId,
+            api_key: state.apiKeys.ozonApiKey,
+            limit: 100
+          });
+
+          const response = await fetch(`/api/ozon/products/list?${params}`);
+          const result = await response.json();
+
+          log("request", "[OZON] Загружены товары", result);
+
+          if (result.body && result.body.result && result.body.result.items) {
+            renderProducts(result.body.result.items, "ozon");
+          } else {
+            elements.productsContainer.innerHTML = '<p class="hint">Ошибка загрузки товаров</p>';
+          }
+        }
+      } catch (e) {
+        log("error", `Ошибка загрузки: ${e.message}`);
+        elements.productsContainer.innerHTML = '<p class="hint">Ошибка загрузки товаров</p>';
+      }
+    }
+
+    function renderProducts(products, marketplace) {
+      if (!products || products.length === 0) {
+        elements.productsContainer.innerHTML = '<p class="hint">Товаров не найдено</p>';
+        return;
+      }
+
+      const html = products.map(p => `
+        <div class="product-card">
+          <h3>${p.offer_id || "N/A"}</h3>
+          <div class="product-info">
+            <p><strong>Название:</strong> ${p.name || "N/A"}</p>
+            <p><strong>Бренд:</strong> ${p.brand || "N/A"}</p>
+            <p><strong>Цена:</strong> ${p.price || "N/A"} ₽</p>
+            <p><strong>Остаток:</strong> ${p.stock || "N/A"} шт</p>
+          </div>
+          <div class="product-actions">
+            <button class="btn btn-secondary" onclick="editProduct('${JSON.stringify(p).replace(/'/g, "&apos;")}')">
+              ✏️ Редактировать
+            </button>
+            <button class="btn btn-secondary" onclick="deleteProduct('${p.offer_id}')">
+              🗑️ Удалить
+            </button>
+          </div>
+        </div>
+      `).join("");
+
+      elements.productsContainer.innerHTML = `<div class="products-grid">${html}</div>`;
+    }
+
+    function renderPayloadsHistory() {
+      if (state.payloadHistory.length === 0) {
+        elements.payloadsContainer.innerHTML = '<p class="hint">История пуста</p>';
+        return;
+      }
+
+      const html = state.payloadHistory.map((p, idx) => `
+        <div class="card" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">#${idx + 1} - ${p.product.offer_id}</h3>
+            <span class="badge">${p.marketplace}</span>
+          </div>
+          <p style="font-size: 12px; color: var(--color-text-secondary); margin: 8px 0 0 0;">
+            ${new Date(p.timestamp).toLocaleString('ru-RU')}
+          </p>
+          <pre style="margin-top: 8px; background: var(--color-secondary); padding: 8px; border-radius: 4px; font-size: 11px;">
+${JSON.stringify(p.product, null, 2)}
+          </pre>
+        </div>
+      `).join("");
+
+      elements.payloadsContainer.innerHTML = html;
+    }
+
+    function editProduct(productJson) {
+      try {
+        state.currentEditProduct = JSON.parse(productJson);
+        elements.modalName.value = state.currentEditProduct.name || "";
+        elements.modalPrice.value = state.currentEditProduct.price || "";
+        elements.modalStock.value = state.currentEditProduct.stock || "";
+        elements.modalBarcode.value = state.currentEditProduct.barcode || "";
+        elements.modalDesc.value = state.currentEditProduct.description || "";
+        elements.modalEdit.classList.add("active");
+      } catch (e) {
+        log("error", "Ошибка открытия редактора");
+      }
+    }
+
+    function closeEditModal() {
+      elements.modalEdit.classList.remove("active");
+      state.currentEditProduct = null;
+    }
+
+    function deleteProduct(offerId) {
+      log("info", `Удаление товара ${offerId}...`);
+      // TODO: реальное удаление через API
+    }
+
+    // ======================== INIT ========================
 
     function init() {
-      mpOzonBtn.addEventListener("click", () => {
+      // Menu
+      elements.actionMenuBtn.addEventListener("click", () => {
+        elements.actionMenu.classList.toggle("active");
+      });
+
+      elements.actionCreate.addEventListener("click", () => showTab("create"));
+      elements.actionMyProducts.addEventListener("click", () => {
+        showTab("products");
+        loadProducts();
+      });
+      elements.actionPayloads.addEventListener("click", () => showTab("payloads"));
+
+      // Marketplace toggle
+      elements.mpOzon.addEventListener("click", () => {
         state.marketplace = "ozon";
         updateMarketplaceUI();
       });
-      mpWbBtn.addEventListener("click", () => {
+      elements.mpWb.addEventListener("click", () => {
         state.marketplace = "wb";
         updateMarketplaceUI();
       });
-      mpBothBtn.addEventListener("click", () => {
+      elements.mpBoth.addEventListener("click", () => {
         state.marketplace = "both";
         updateMarketplaceUI();
       });
-      envSelect.addEventListener("change", updateEnv);
 
-      btnBuildPayload.addEventListener("click", buildPayload);
-      btnSend.addEventListener("click", sendRequest);
-      btnClearLog.addEventListener("click", () => {
-        logEl.innerHTML = "";
+      // API Keys
+      [elements.ozonClientId, elements.ozonApiKey, elements.wbApiKey].forEach(el => {
+        el.addEventListener("input", updateApiKeyStatus);
+      });
+
+      // Buttons
+      elements.btnCreateLocal.addEventListener("click", createLocalPayload);
+      elements.btnSendApi.addEventListener("click", sendToApi);
+      elements.btnClearLog.addEventListener("click", () => {
+        elements.log.innerHTML = "";
         log("info", "Лог очищен");
       });
-
-      ["ozonClientId", "ozonApiKey", "wbApiKey"].forEach((k) => {
-        fields[k].addEventListener("input", () => {
-          const hasOzon = !!fields.ozonClientId.value.trim() && !!fields.ozonApiKey.value.trim();
-          const hasWb = !!fields.wbApiKey.value.trim();
-
-          if (hasOzon || hasWb) {
-            connStatus.className = "status";
-            connStatus.innerHTML =
-              '<span class="status-dot"></span>' +
-              (hasOzon && hasWb
-                ? "ключи Ozon и WB заданы"
-                : hasOzon
-                ? "заданы ключи Ozon"
-                : "задан ключ WB");
-          } else {
-            connStatus.className = "status status-warning";
-            connStatus.innerHTML =
-              '<span class="status-dot"></span> токены не заданы';
-          }
-        });
+      elements.btnRefreshProducts.addEventListener("click", loadProducts);
+      elements.btnClearPayloads.addEventListener("click", () => {
+        state.payloadHistory = [];
+        renderPayloadsHistory();
+        log("info", "История очищена");
       });
 
-      ["price", "stock"].forEach((id) => {
-        fields[id].addEventListener("input", rebuildMetrics);
+      elements.btnSaveChanges.addEventListener("click", () => {
+        log("info", "Сохранение изменений...");
+        // TODO: реальное сохранение через API
+        closeEditModal();
       });
 
-      updateMarketplaceUI();
-      updateEnv();
-      rebuildMetrics();
+      updateApiKeyStatus();
+      log("info", "Приложение готово. Введите API ключи для работы.");
+    }
 
-      log(
-        "info",
-        "Готово. Выбери маркетплейс, заполни карточку и нажми «Сформировать payload»."
-      );
+    function updateMarketplaceUI() {
+      elements.mpOzon.classList.remove("active");
+      elements.mpWb.classList.remove("active");
+      elements.mpBoth.classList.remove("active");
+
+      if (state.marketplace === "ozon") elements.mpOzon.classList.add("active");
+      else if (state.marketplace === "wb") elements.mpWb.classList.add("active");
+      else elements.mpBoth.classList.add("active");
+
+      log("info", `Маркетплейс: ${state.marketplace.toUpperCase()}`);
     }
 
     document.addEventListener("DOMContentLoaded", init);
