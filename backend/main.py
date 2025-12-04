@@ -1,6 +1,5 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
@@ -18,6 +17,10 @@ import jwt
 SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+
+# OpenRouter API Config
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = "tngtech/deepseek-r1t2-chimera:free"
 
 # ======================== DATABASE ========================
 
@@ -102,12 +105,19 @@ class ProductCreate(BaseModel):
 class BatchProducts(BaseModel):
     products: List[ProductCreate]
 
+class GenerateDescriptionRequest(BaseModel):
+    product_name: str
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    key_features: Optional[List[str]] = []
+    marketplace: str = "ozon"
+
 # ======================== FASTAPI APP ========================
 
 app = FastAPI(
-    title="Ozon & Wildberries Product Manager v3.2",
-    description="API с аутентификацией, batch upload и загрузкой медиа",
-    version="3.2.0",
+    title="Ozon & Wildberries Product Manager v3.5",
+    description="API с OpenRouter AI и категориями товаров",
+    version="3.5.0",
     debug=True
 )
 
@@ -271,7 +281,404 @@ async def get_keys(marketplace: str, current_user: dict = Depends(get_current_us
             safe_keys[k] = v[:4] + "***" + v[-4:] if len(v) > 8 else "***"
     return safe_keys
 
-# ======================== OZON HELPERS ========================
+# ======================== CATEGORIES ENDPOINTS ========================
+
+@app.post("/api/categories/ozon/tree")
+async def get_ozon_categories(
+    current_user: dict = Depends(get_current_user)
+):
+    """Получить дерево категорий Ozon"""
+    keys = get_api_keys(current_user["user_id"], "ozon")
+    if not keys or "client_id" not in keys or "api_key" not in keys:
+        raise HTTPException(status_code=400, detail="Ozon API keys not configured")
+    
+    headers = {
+        "Client-Id": keys["client_id"],
+        "Api-Key": keys["api_key"],
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "language": "DEFAULT"
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api-seller.ozon.ru/v1/description-category/tree",
+                json=payload,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Ozon categories loaded")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ Ozon API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"Ozon error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error loading Ozon categories: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/categories/wildberries/tree")
+async def get_wildberries_categories(
+    current_user: dict = Depends(get_current_user)
+):
+    """Получить дерево категорий Wildberries"""
+    keys = get_api_keys(current_user["user_id"], "wildberries")
+    if not keys or "api_key" not in keys:
+        raise HTTPException(status_code=400, detail="Wildberries API key not configured")
+    
+    headers = {
+        "X-API-Key": keys["api_key"]
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            # Получаем родительские категории
+            response = await client.get(
+                "https://content-api.wildberries.ru/content/v2/object/parent/all",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Wildberries categories loaded")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ WB API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"WB error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error loading WB categories: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/categories/wildberries/subjects")
+async def get_wildberries_subjects(
+    parent_id: Optional[int] = None,
+    name: Optional[str] = None,
+    limit: int = 30,
+    offset: int = 0,
+    current_user: dict = Depends(get_current_user)
+):
+    """Получить предметы (подкатегории) Wildberries"""
+    keys = get_api_keys(current_user["user_id"], "wildberries")
+    if not keys or "api_key" not in keys:
+        raise HTTPException(status_code=400, detail="Wildberries API key not configured")
+    
+    headers = {
+        "X-API-Key": keys["api_key"]
+    }
+    
+    params = {
+        "limit": min(limit, 1000),
+        "offset": offset
+    }
+    
+    if parent_id:
+        params["parentID"] = parent_id
+    
+    if name:
+        params["name"] = name
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                "https://content-api.wildberries.ru/content/v2/object/all",
+                headers=headers,
+                params=params
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ WB subjects loaded")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ WB API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"WB error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error loading WB subjects: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/categories/wildberries/characteristics/{subject_id}")
+async def get_wildberries_characteristics(
+    subject_id: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """Получить характеристики предмета Wildberries"""
+    keys = get_api_keys(current_user["user_id"], "wildberries")
+    if not keys or "api_key" not in keys:
+        raise HTTPException(status_code=400, detail="Wildberries API key not configured")
+    
+    headers = {
+        "X-API-Key": keys["api_key"]
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(
+                f"https://content-api.wildberries.ru/content/v2/object/charcs/{subject_id}",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ WB characteristics loaded for subject {subject_id}")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ WB API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"WB error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error loading WB characteristics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+# ======================== BARCODE ENDPOINTS ========================
+    
+@app.post("/api/ozon/barcode/add")
+async def add_ozon_barcode(
+    request_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Привязать баркод к товару в Ozon"""
+    keys = get_api_keys(current_user["user_id"], "ozon")
+    if not keys or "api_key" not in keys or "client_id" not in keys:
+        raise HTTPException(status_code=400, detail="Ozon API keys not configured")
+    
+    headers = {
+        "Client-Id": keys["client_id"],
+        "Api-Key": keys["api_key"],
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "barcodes": request_data.get("barcodes", [])
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api-seller.ozon.ru/v1/barcode/add",
+                headers=headers,
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Ozon barcodes added: {len(payload['barcodes'])} items")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ Ozon API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"Ozon error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error adding Ozon barcodes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/api/ozon/barcode/generate")
+async def generate_ozon_barcodes(
+    request_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Сгенерировать баркоды для товаров в Ozon"""
+    keys = get_api_keys(current_user["user_id"], "ozon")
+    if not keys or "api_key" not in keys or "client_id" not in keys:
+        raise HTTPException(status_code=400, detail="Ozon API keys not configured")
+    
+    headers = {
+        "Client-Id": keys["client_id"],
+        "Api-Key": keys["api_key"],
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "product_ids": [str(pid) for pid in request_data.get("product_ids", [])]
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api-seller.ozon.ru/v1/barcode/generate",
+                headers=headers,
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ Ozon barcodes generated for {len(payload['product_ids'])} products")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ Ozon API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"Ozon error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error generating Ozon barcodes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/api/wildberries/barcode/generate")
+async def generate_wildberries_barcodes(
+    request_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Сгенерировать баркоды в Wildberries"""
+    keys = get_api_keys(current_user["user_id"], "wildberries")
+    if not keys or "api_key" not in keys:
+        raise HTTPException(status_code=400, detail="Wildberries API key not configured")
+    
+    headers = {
+        "Authorization": keys["api_key"],
+        "Content-Type": "application/json"
+    }
+    
+    count = request_data.get("count", 1)
+    if count < 1 or count > 5000:
+        raise HTTPException(status_code=400, detail="Count must be between 1 and 5000")
+    
+    payload = {
+        "count": count
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://content-api.wildberries.ru/content/v2/barcodes",
+                headers=headers,
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"✅ WB barcodes generated: {count} items")
+                return data
+            else:
+                error_detail = response.text
+                print(f"❌ WB API error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"WB error: {error_detail}")
+    except Exception as e:
+        print(f"❌ Error generating WB barcodes: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# ======================== OPENROUTER AI ENDPOINTS ========================
+
+async def generate_description_openrouter(
+    product_name: str,
+    brand: Optional[str] = None,
+    category: Optional[str] = None,
+    key_features: Optional[List[str]] = None,
+    marketplace: str = "ozon"
+) -> str:
+    """Генерация описания товара с помощью OpenRouter AI"""
+    
+    if not OPENROUTER_API_KEY:
+        raise HTTPException(
+            status_code=400,
+            detail="OpenRouter API key not configured. Set OPENROUTER_API_KEY environment variable."
+        )
+    
+    features_text = ", ".join(key_features) if key_features else "не указаны"
+    marketplace_name = "Ozon" if marketplace == "ozon" else "Wildberries"
+    
+    prompt = f"""Напиши краткое и привлекательное описание товара для маркетплейса {marketplace_name}.
+
+Название товара: {product_name}
+Бренд: {brand or 'не указан'}
+Категория: {category or 'не указана'}
+Ключевые характеристики: {features_text}
+
+Требования:
+- Описание должно быть кратким (100-150 слов)
+- Описание должно быть привлекательным и информативным
+- Описание должно подчеркивать преимущества товара
+- Избегай чрезмерно использовать восклицательные знаки
+- Используй профессиональный тон
+- Написано для {marketplace_name}
+
+Напиши только описание без дополнительных комментариев."""
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:8000",
+        "X-Title": "Marketplace Manager"
+    }
+
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1024,
+        "top_p": 0.95
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                json=payload,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "choices" in data and len(data["choices"]) > 0:
+                    choice = data["choices"][0]
+                    if "message" in choice and "content" in choice["message"]:
+                        description = choice["message"]["content"].strip()
+                        if description and description != "":
+                            print(f"✅ Description generated for: {product_name}")
+                            return description
+                        else:
+                            raise HTTPException(status_code=500, detail="Empty response from OpenRouter (empty content)")
+                else:
+                    raise HTTPException(status_code=500, detail="No choices in response from OpenRouter")
+            else:
+                error_detail = response.text
+                print(f"❌ OpenRouter error: {response.status_code} - {error_detail}")
+                raise HTTPException(status_code=response.status_code, detail=f"OpenRouter error: {error_detail}")
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="OpenRouter request timeout")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ OpenRouter error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/api/generate-description")
+async def generate_description(
+    request: GenerateDescriptionRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Endpoint для генерации описания товара с помощью OpenRouter AI"""
+    
+    try:
+        description = await generate_description_openrouter(
+            product_name=request.product_name,
+            brand=request.brand,
+            category=request.category,
+            key_features=request.key_features,
+            marketplace=request.marketplace
+        )
+        
+        return {
+            "success": True,
+            "description": description
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"❌ Error generating description: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# ======================== PRODUCT ENDPOINTS ========================
 
 def build_ozon_product(product: ProductCreate) -> dict:
     """Построение продукта для Ozon API"""
@@ -283,25 +690,22 @@ def build_ozon_product(product: ProductCreate) -> dict:
         "description": product.description or "",
     }
     
-    # Обработка картинок
     if product.images:
         ozon_product["images"] = [{"file_name": url} for url in product.images if url]
         
-        # Главная картинка
         if product.primary_image and product.primary_image > 0:
             ozon_product["primary_image"] = {"file_name": product.images[product.primary_image - 1]}
     
-    # Обработка видео
     if product.video_url:
         ozon_product["complex_attributes"] = [
             {
                 "complex_id": 100001,
-                "id": 21841,  # URL видео
+                "id": 21841,
                 "values": [{"value": product.video_url}]
             },
             {
                 "complex_id": 100001,
-                "id": 21837,  # Название видео
+                "id": 21837,
                 "values": [{"value": "Video 1"}]
             }
         ]
@@ -312,7 +716,6 @@ def build_ozon_product(product: ProductCreate) -> dict:
     return ozon_product
 
 async def ozon_create_product(product: ProductCreate, client_id: str, api_key: str) -> dict:
-    """Загрузка продукта в Ozon"""
     ozon_product = build_ozon_product(product)
     payload = {"items": [ozon_product]}
     headers = {
@@ -337,37 +740,7 @@ async def ozon_create_product(product: ProductCreate, client_id: str, api_key: s
         print(f"❌ Ozon API error: {str(e)}")
         return {"status": 500, "error": str(e), "success": False}
 
-# ======================== WILDBERRIES HELPERS ========================
-
-async def wb_save_media(nmId: int, media_urls: List[str], api_key: str) -> dict:
-    """Загрузка картинок в Wildberries"""
-    payload = {
-        "nmId": nmId,
-        "data": media_urls
-    }
-    headers = {
-        "X-API-Key": api_key,
-        "Content-Type": "application/json"
-    }
-    
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                "https://content-api.wildberries.ru/content/v3/media/save",
-                json=payload,
-                headers=headers
-            )
-            return {
-                "status": response.status_code,
-                "body": response.json() if response.text else {},
-                "success": response.status_code == 200
-            }
-    except Exception as e:
-        print(f"❌ Wildberries API error: {str(e)}")
-        return {"status": 500, "error": str(e), "success": False}
-
 async def wb_create_product(product: ProductCreate, api_key: str) -> dict:
-    """Загрузка продукта в Wildberries"""
     wb_product = {
         "vendorCode": product.wb_sku or product.offer_id,
         "brand": product.brand or "",
@@ -407,14 +780,11 @@ async def wb_create_product(product: ProductCreate, api_key: str) -> dict:
         print(f"❌ Wildberries API error: {str(e)}")
         return {"status": 500, "error": str(e), "success": False}
 
-# ======================== PRODUCT ENDPOINTS ========================
-
 @app.post("/api/ozon/products/batch")
 async def batch_create_ozon(
     batch: BatchProducts,
     current_user: dict = Depends(get_current_user)
 ):
-    """Batch загрузка товаров в Ozon"""
     if len(batch.products) > 100:
         raise HTTPException(status_code=400, detail="Maximum 100 products per batch")
     
@@ -446,7 +816,6 @@ async def batch_create_wb(
     batch: BatchProducts,
     current_user: dict = Depends(get_current_user)
 ):
-    """Batch загрузка товаров в Wildberries"""
     if len(batch.products) > 100:
         raise HTTPException(status_code=400, detail="Maximum 100 products per batch")
     
@@ -473,45 +842,17 @@ async def batch_create_wb(
     print(f"✅ Batch created {len(batch.products)} products in Wildberries")
     return {"total": len(batch.products), "results": results}
 
-@app.get("/api/ozon/products/list")
-async def list_ozon_products(
-    limit: int = 100,
-    current_user: dict = Depends(get_current_user)
-):
-    """Список товаров Ozon"""
-    keys = get_api_keys(current_user["user_id"], "ozon")
-    if not keys or "client_id" not in keys or "api_key" not in keys:
-        raise HTTPException(status_code=400, detail="Ozon API keys not configured")
-    
-    print(f"Listing Ozon products for user {current_user['username']}")
-    return {"message": "Coming soon"}
-
-@app.get("/api/wb/products/list")
-async def list_wb_products(
-    limit: int = 100,
-    current_user: dict = Depends(get_current_user)
-):
-    """Список товаров Wildberries"""
-    keys = get_api_keys(current_user["user_id"], "wildberries")
-    if not keys or "api_key" not in keys:
-        raise HTTPException(status_code=400, detail="Wildberries API key not configured")
-    
-    print(f"Listing Wildberries products for user {current_user['username']}")
-    return {"message": "Coming soon"}
-
 # ======================== STATIC FILES ========================
 
 @app.get("/")
 async def root():
-    """Главная страница"""
     index_path = FRONTEND_PATH / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path), media_type="text/html")
-    return {"message": "Welcome to Marketplace Manager v3.2"}
+    return {"message": "Welcome to Marketplace Manager v3.5"}
 
 @app.get("/index.html")
 async def index_page():
-    """Страница авторизации"""
     index_path = FRONTEND_PATH / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path), media_type="text/html")
@@ -519,7 +860,6 @@ async def index_page():
 
 @app.get("/dashboard.html")
 async def dashboard_page():
-    """Страница dashboard"""
     dashboard_path = FRONTEND_PATH / "dashboard.html"
     if dashboard_path.exists():
         return FileResponse(str(dashboard_path), media_type="text/html")
@@ -527,7 +867,6 @@ async def dashboard_page():
 
 @app.get("/favicon.ico")
 async def favicon():
-    """Favicon"""
     favicon_path = FRONTEND_PATH / "favicon.ico"
     if favicon_path.exists():
         return FileResponse(str(favicon_path))
@@ -535,16 +874,25 @@ async def favicon():
 
 @app.get("/health")
 async def health():
-    """Health check"""
-    return {"status": "ok", "version": "3.2.0"}
+    return {"status": "ok", "version": "3.5.0"}
 
 # ======================== STARTUP/SHUTDOWN ========================
 
 @app.on_event("startup")
 async def startup():
-    print(f"🚀 Application started (version 3.2.0)")
+    print(f"🚀 Application started (version 3.5.0)")
     print(f"📍 Database: {DB_PATH}")
     print(f"📁 Frontend: {FRONTEND_PATH}")
+    if OPENROUTER_API_KEY:
+        print(f"✅ OpenRouter AI API configured")
+        print(f"📊 Model: {OPENROUTER_MODEL}")
+    else:
+        print(f"⚠️  OpenRouter AI API not configured. Set OPENROUTER_API_KEY environment variable.")
+    print(f"📂 Categories endpoints:")
+    print(f"   - POST /api/categories/ozon/tree")
+    print(f"   - GET /api/categories/wildberries/tree")
+    print(f"   - GET /api/categories/wildberries/subjects")
+    print(f"   - GET /api/categories/wildberries/characteristics/{{subject_id}}")
 
 @app.on_event("shutdown")
 async def shutdown():
