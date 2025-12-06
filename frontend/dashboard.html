@@ -26,10 +26,10 @@
         .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
-        .btn-secondary { background: #f0f0f0; color: #333; }
-        .btn-secondary:hover { background: #e0e0e0; }
+        .btn-primary { background: #27ae60; color: white; }
+        .btn-primary:hover { background: #229954; }
+        .btn-secondary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
         .btn-small { padding: 0.5rem 1rem; font-size: 0.9rem; }
         .btn-success { background: #27ae60; color: white; }
         .btn-success:hover { background: #229954; }
@@ -38,7 +38,6 @@
         .alert { padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
         .marketplace-selector { display: flex; gap: 1rem; margin-bottom: 2rem; }
         .marketplace-btn { flex: 1; padding: 1.5rem 2rem; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; font-weight: 600; font-size: 1.1rem; transition: all 0.3s; }
         .marketplace-btn.active { border-color: #667eea; background: rgba(102, 126, 234, 0.1); }
@@ -55,25 +54,18 @@
         h3 { margin-bottom: 1rem; color: #555; }
         h4 { margin-bottom: 1rem; color: #666; }
         hr { border: none; border-top: 1px solid #e0e0e0; margin: 2rem 0; }
-        
-        /* Контейнер с множественными формами */
         .products-forms-container { max-height: 70vh; overflow-y: auto; padding-right: 1rem; }
         .product-form-wrapper { background: #f9f9f9; border: 2px solid #e0e0e0; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; position: relative; }
         .product-form-wrapper.active { background: white; border-color: #667eea; }
         .product-form-number { display: inline-block; background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
         .remove-form-btn { position: absolute; top: 1rem; right: 1rem; background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
         .remove-form-btn:hover { background: #c0392b; }
-        
-        /* Кнопки действий в форме */
+        .media-block { margin-bottom: 1.5rem; padding: 1rem; background: #f0f0f0; border-radius: 8px; }
+        .media-input { width: 100%; margin-bottom: 1rem; }
+        .media-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .media-link { background: #e0e0e0; padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; word-break: break-all; }
         .form-actions { display: flex; gap: 1rem; margin-top: 2rem; }
         .form-actions .btn { flex: 1; padding: 1rem; }
-        
-        /* Таблица товаров */
-        .filters-row { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: flex-end; }
-        .filters-row > * { flex: 1; }
-        .filters-row .form-input, 
-        .filters-row .form-select, 
-        .filters-row .btn { margin: 0; }
         .product-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 1rem; align-items: center; background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #e0e0e0; }
         .product-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
@@ -83,7 +75,6 @@
         .modal.active { display: flex; align-items: center; justify-content: center; }
         .modal-content { background-color: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .modal-close { float: right; font-size: 1.5rem; cursor: pointer; color: #999; }
-        
         @media (max-width: 768px) { 
             .form-row { grid-template-columns: 1fr; } 
             .form-actions { flex-direction: column; }
@@ -112,28 +103,17 @@
         <div id="create" class="tab-content active">
             <div class="card">
                 <h2>Создание товара</h2>
-                
                 <div class="marketplace-selector">
                     <button class="marketplace-btn active" onclick="setMarketplace('ozon')">🔵 Ozon</button>
                     <button class="marketplace-btn" onclick="setMarketplace('wildberries')">🔴 Wildberries</button>
                 </div>
-
                 <div id="alertContainer"></div>
-
                 <div class="products-forms-container" id="productsFormsContainer">
-                    <!-- Формы товаров будут добавляться здесь динамически -->
                 </div>
-
                 <div class="form-actions">
-                    <button class="btn btn-secondary" onclick="addProductForm()">
-                        ➕ Добавить товар
-                    </button>
-                    <button class="btn btn-secondary" onclick="openBatchModal()">
-                        📦 Batch загрузка
-                    </button>
-                    <button class="btn btn-primary" onclick="submitAllProducts()">
-                        🚀 Загрузить все
-                    </button>
+                    <button class="btn btn-secondary" onclick="addProductForm()">➕ Добавить товар</button>
+                    <button class="btn btn-secondary" onclick="openBatchModal()">📦 Batch загрузка</button>
+                    <button class="btn btn-primary" onclick="submitAllProducts()">🚀 Загрузить все</button>
                 </div>
             </div>
         </div>
@@ -142,32 +122,21 @@
         <div id="products" class="tab-content">
             <div class="card">
                 <h2>📦 Управление товарами</h2>
-                
-                <div class="filters-row">
-                    <div>
-                        <input type="text" class="form-input" id="searchInput" placeholder="🔍 Поиск по названию/SKU" onkeyup="filterProducts()">
-                    </div>
-                    <div>
-                        <select class="form-select" id="marketplaceFilter" onchange="filterProducts()">
-                            <option value="">Все маркетплейсы</option>
-                            <option value="ozon">🔵 Ozon</option>
-                            <option value="wildberries">🔴 Wildberries</option>
-                        </select>
-                    </div>
-                    <div>
-                        <select class="form-select" id="sortBy" onchange="filterProducts()">
-                            <option value="name">По названию</option>
-                            <option value="price">По цене</option>
-                            <option value="stock">По остатку</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button class="btn btn-secondary" onclick="loadProducts()" style="width: 100%;">🔄 Обновить</button>
-                    </div>
+                <div class="filters-row" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <input type="text" class="form-input" id="searchInput" placeholder="🔍 Поиск по названию/SKU" onkeyup="filterProducts()" style="flex: 1;">
+                    <select class="form-select" id="marketplaceFilter" onchange="filterProducts()" style="width: 12rem;">
+                        <option value="">Все маркетплейсы</option>
+                        <option value="ozon">🔵 Ozon</option>
+                        <option value="wildberries">🔴 Wildberries</option>
+                    </select>
+                    <select class="form-select" id="sortBy" onchange="filterProducts()" style="width: 12rem;">
+                        <option value="name">По названию</option>
+                        <option value="price">По цене</option>
+                        <option value="stock">По остатку</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadProducts()" style="width: 10rem;">🔄 Обновить</button>
                 </div>
-
                 <div id="productsAlertContainer"></div>
-
                 <div id="productsList" class="loading">
                     <div class="spinner"></div>
                     <p>Загрузка товаров...</p>
@@ -179,7 +148,6 @@
         <div id="profile" class="tab-content">
             <div class="card">
                 <h2>Профиль и API Ключи</h2>
-                
                 <div style="margin-bottom: 2rem;">
                     <h4>🔵 Ozon API Ключи</h4>
                     <div class="form-group">
@@ -192,9 +160,7 @@
                     </div>
                     <button class="btn btn-primary" onclick="saveOzonKeys()">💾 Сохранить Ozon ключи</button>
                 </div>
-
                 <hr>
-
                 <div style="margin-top: 2rem;">
                     <h4>🔴 Wildberries API Ключ</h4>
                     <div class="form-group">
@@ -207,89 +173,26 @@
         </div>
     </div>
 
-    <!-- Modal: Привязать баркод -->
-    <div id="barcodeModal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeBarcodeModal()">&times;</span>
-            <h3>🎫 Привязать баркоды</h3>
-            <div id="barcodeModalError"></div>
-            <div class="form-group">
-                <label class="form-label">Баркоды (по одному на строку)</label>
-                <textarea class="form-textarea" id="barcodesToAdd" rows="4" placeholder="4606400111111&#10;4606400111112"></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="attachBarcodes()" style="width: 100%;">✅ Привязать</button>
-        </div>
-    </div>
-
-    <!-- Modal: Сгенерировать баркоды -->
-    <div id="generateModal" class="modal">
-        <div class="modal-content">
-            <span class="modal-close" onclick="closeGenerateModal()">&times;</span>
-            <h3>🎫 Сгенерировать баркоды</h3>
-            <div id="generateModalError"></div>
-            <div class="form-group">
-                <label class="form-label form-label-required">Количество баркодов</label>
-                <input type="number" class="form-input" id="barcodeCount" value="1" min="1" max="5000">
-            </div>
-            <button class="btn btn-success" onclick="generateBarcodes()" style="width: 100%;">🎫 Сгенерировать</button>
-            <div id="generatedBarcodes" style="display: none; margin-top: 1rem;">
-                <textarea class="form-textarea" id="barcodeResult" readonly style="font-family: monospace;" rows="4"></textarea>
-                <button class="btn btn-secondary btn-small" onclick="copyBarcodes()" style="margin-top: 0.5rem; width: 100%;">📋 Копировать</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Batch загрузка товаров -->
+    <!-- Модальные окна -->
     <div id="batchModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <span class="modal-close" onclick="closeBatchModal()">&times;</span>
-            <h3>📦 Batch загрузка товаров</h3>
-            <div id="batchModalError"></div>
-            
-            <div class="form-group">
-                <label class="form-label">Формат</label>
-                <select class="form-select" id="batchFormat" onchange="onBatchFormatChange()">
-                    <option value="json">JSON</option>
-                    <option value="csv">CSV</option>
-                    <option value="example">📋 Пример</option>
-                </select>
-            </div>
-
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeBatchModal()">×</span>
+            <h3>Batch загрузка</h3>
+            <select id="batchFormat" onchange="onBatchFormatChange()">
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+                <option value="example">Пример</option>
+            </select>
             <div id="batchInputContainer">
-                <div class="form-group">
-                    <label class="form-label">Данные товаров</label>
-                    <textarea class="form-textarea" id="batchInput" rows="6" placeholder='[{"offer_id":"SKU001","name":"Товар 1","price":5000,"stock":100}]'></textarea>
-                </div>
+                <textarea id="batchInput" class="form-textarea" rows="10" placeholder="Введите данные"></textarea>
             </div>
-
             <div id="batchExampleContainer" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Пример JSON</label>
-                    <pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.75rem; line-height: 1.2;">
-[
-  {
-    "offer_id": "SKU001",
-    "name": "Товар 1",
-    "price": 5000,
-    "stock": 100,
-    "brand": "Бренд",
-    "barcode": "4606400111111",
-    "description": "Описание"
-  },
-  {
-    "offer_id": "SKU002",
-    "name": "Товар 2",
-    "price": 3000,
-    "stock": 50
-  }
-]
-                    </pre>
-                </div>
+                <pre>
+[{"offer_id":"SKU001","name":"Товар 1","price":5000,"stock":100,"brand":"Бренд","barcode":"4606400111111"}]
+                </pre>
             </div>
-
-            <button class="btn btn-success" onclick="submitBatchProducts()" style="width: 100%; margin-top: 1rem;">
-                🚀 Загрузить
-            </button>
+            <button class="btn btn-primary" onclick="submitBatchProducts()">Загрузить</button>
+            <div id="batchModalError"></div>
         </div>
     </div>
 
@@ -298,20 +201,14 @@
         const MAX_FORMS = 100;
         let token = localStorage.getItem('access_token');
         let currentMarketplace = 'ozon';
-        let selectedCategory = null;
-        let selectedType = null;
-        let categories = [];
-        let characteristics = [];
-        let allProducts = [];
-        let currentProductForBarcode = null;
         let productForms = [];
         let formCounter = 0;
+        let localImagePaths = {};
 
         if (!token) window.location.href = '/index.html';
 
         document.addEventListener('DOMContentLoaded', () => {
             loadUsername();
-            loadCategories();
             addProductForm();
         });
 
@@ -330,7 +227,6 @@
             document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
             document.getElementById(tab).classList.add('active');
             document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-            
             if (tab === 'products') loadProducts();
         }
 
@@ -339,15 +235,14 @@
                 showAlert(`⚠️ Лимит достигнут! Максимум ${MAX_FORMS} товаров за раз`, 'warning');
                 return;
             }
-
             const formId = formCounter++;
             const container = document.getElementById('productsFormsContainer');
-            
+
             const formHTML = `
                 <div class="product-form-wrapper" id="form-${formId}">
-                    <div class="product-form-number">Товар #${productForms.length + 1}</div>
+                    <div class="product-form-number">Товар #${productForms.length += 1}</div>
                     <button type="button" class="remove-form-btn" onclick="removeProductForm(${formId})">✕ Удалить</button>
-                    
+
                     <div class="form-group">
                         <label class="form-label form-label-required">Категория товара</label>
                         <select class="form-select category-select" data-form-id="${formId}" onchange="onCategoryChange(${formId})">
@@ -404,9 +299,7 @@
                     <div class="form-group">
                         <label class="form-label">Описание</label>
                         <textarea class="form-textarea description" data-form-id="${formId}" rows="4" placeholder="Описание товара"></textarea>
-                        <button type="button" class="btn btn-secondary btn-small" onclick="generateDescription(${formId})" style="margin-top: 0.5rem;">
-                            🤖 Сгенерировать описание
-                        </button>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="generateDescription(${formId})" style="margin-top: 0.5rem;">🤖 Сгенерировать описание</button>
                     </div>
 
                     <div class="form-group">
@@ -414,12 +307,25 @@
                             <input type="checkbox" class="auto-barcode" data-form-id="${formId}" checked> Сгенерировать баркод при загрузке
                         </label>
                     </div>
+
+                    <!-- Медиа-блок -->
+                    <div class="media-block">
+                        <div class="section-title">📷 Фото</div>
+                        <input type="file" class="media-input" data-form-id="${formId}" multiple accept="image/*" onchange="handleImageSelect(event, ${formId})">
+                        <div class="media-links" id="image-links-${formId}"></div>
+                    </div>
+                    <div class="media-block">
+                        <div class="section-title">🎥 Видео</div>
+                        <input type="file" class="media-input" data-form-id="${formId}" multiple accept="video/*" onchange="handleVideoSelect(event, ${formId})">
+                        <div class="media-links" id="video-links-${formId}"></div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="generateVideoCover(${formId})" style="margin-top: 0.5rem;">🎥 Сгенерировать видеообложку</button>
                 </div>
             `;
-
             container.innerHTML += formHTML;
             populateCategorySelect(formId);
             productForms.push({ id: formId, category: null, type: null });
+            localImagePaths[formId] = [];
         }
 
         function removeProductForm(formId) {
@@ -427,6 +333,7 @@
             if (form) {
                 form.remove();
                 productForms = productForms.filter(f => f.id !== formId);
+                delete localImagePaths[formId];
                 updateFormNumbers();
             }
         }
@@ -460,7 +367,6 @@
 
         async function loadCategories() {
             const selects = document.querySelectorAll('select.category-select');
-            
             try {
                 if (currentMarketplace === 'ozon') {
                     const response = await fetch(`${API_URL}/categories/ozon/tree`, {
@@ -481,7 +387,6 @@
                     const data = await response.json();
                     categories = data.data || [];
                 }
-                
                 selects.forEach(select => {
                     select.innerHTML = '<option value="">-- Выбери категорию --</option>';
                     categories.forEach((cat, i) => {
@@ -522,7 +427,6 @@
         async function onCategoryChange(formId) {
             const select = document.querySelector(`select.category-select[data-form-id="${formId}"]`);
             const index = parseInt(select.value);
-            
             if (index === '' || isNaN(index)) {
                 const form = productForms.find(f => f.id === formId);
                 form.category = null;
@@ -531,11 +435,9 @@
                 document.querySelector(`.characteristics-container-${formId}`).innerHTML = '';
                 return;
             }
-
             const selectedCategory = categories[index];
             const form = productForms.find(f => f.id === formId);
             form.category = selectedCategory;
-
             if (currentMarketplace === 'ozon') {
                 if (selectedCategory.children && selectedCategory.children.length > 0) {
                     document.querySelector(`.type-group-${formId}`).style.display = 'block';
@@ -565,21 +467,17 @@
         async function onTypeChange(formId) {
             const select = document.querySelector(`select.type-select[data-form-id="${formId}"]`);
             const index = parseInt(select.value);
-            
             if (index === '' || isNaN(index)) {
                 const form = productForms.find(f => f.id === formId);
                 form.type = null;
                 document.querySelector(`.characteristics-container-${formId}`).innerHTML = '';
                 return;
             }
-            
             const option = select.options[index + 1];
             const typeId = parseInt(option.dataset.typeId);
             const categoryId = parseInt(option.dataset.categoryId);
-            
             const form = productForms.find(f => f.id === formId);
             form.type = { type_id: typeId, category_id: categoryId };
-            
             await loadOzonCharacteristics(formId, categoryId, typeId);
         }
 
@@ -636,12 +534,10 @@
         async function onWbSubjectChange(formId) {
             const select = document.querySelector(`select.subject-select[data-form-id="${formId}"]`);
             const index = parseInt(select.value);
-            
             if (index === '' || isNaN(index)) {
                 document.querySelector(`.wb-characteristics-container-${formId}`).innerHTML = '';
                 return;
             }
-            
             const subjectId = parseInt(select.options[index + 1].dataset.subjectId);
             await loadWbCharacteristics(formId, subjectId);
         }
@@ -666,7 +562,6 @@
                 document.querySelector(`.characteristics-container-${formId}`).innerHTML = '';
                 return;
             }
-            
             let html = '<div class="characteristics-section"><div class="section-title">✨ Характеристики категории</div>';
             characteristics.forEach((char) => {
                 const badge = char.is_required ? '<span class="required-badge">Обязательно</span>' : '';
@@ -686,7 +581,6 @@
                 document.querySelector(`.wb-characteristics-container-${formId}`).innerHTML = '';
                 return;
             }
-            
             let html = '<div class="section-title" style="margin-top: 1rem;">✨ Характеристики предмета</div>';
             characteristics.forEach((char) => {
                 const badge = char.required ? '<span class="required-badge">Обязательно</span>' : '';
@@ -706,11 +600,9 @@
                 showAlert('⚠️ Заполни название товара', 'error');
                 return;
             }
-
             const button = event.target;
             button.disabled = true;
             button.textContent = '⏳ Генерирую...';
-
             try {
                 const response = await fetch(`${API_URL}/generate-description`, {
                     method: 'POST',
@@ -724,7 +616,6 @@
                         marketplace: currentMarketplace
                     })
                 });
-
                 if (response.ok) {
                     const data = await response.json();
                     document.querySelector(`.description[data-form-id="${formId}"]`).value = data.description;
@@ -740,23 +631,116 @@
             }
         }
 
+        // === Генерация видеообложки ===
+        async function generateVideoCover(formId) {
+            const container = document.getElementById(`image-links-${formId}`);
+            const fileIds = Array.from(container.querySelectorAll('.media-link[data-file-id]'))
+                .map(el => el.dataset.fileId);
+            if (fileIds.length === 0) {
+                showAlert('⚠️ Загрузи хотя бы одно изображение', 'error');
+                return;
+            }
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '⏳ Генерирую...';
+            try {
+                const response = await fetch('/api/generate-video-cover', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(fileIds)
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const videoContainer = document.getElementById(`video-links-${formId}`);
+                    const link = document.createElement('div');
+                    link.className = 'media-link';
+                    link.dataset.url = data.video_url;
+                    link.textContent = '🎥 Видеообложка';
+                    link.onclick = () => window.open(data.video_url, '_blank');
+                    videoContainer.appendChild(link);
+                    showAlert('✅ Видеообложка сгенерирована', 'success');
+                } else {
+                    showAlert('❌ Ошибка генерации видеообложки', 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🎥 Сгенерировать видеообложку';
+            }
+        }
+
+        // === Загрузка фото ===
+        async function handleImageSelect(event, formId) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                await uploadMedia(file, formId, true);
+            }
+        }
+
+        // === Загрузка видео ===
+        async function handleVideoSelect(event, formId) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                await uploadMedia(file, formId, false);
+            }
+        }
+
+        // === Загрузка медиа (catbox.moe) ===
+        async function uploadMedia(file, formId, isImage) {
+            const formData = new FormData();
+            formData.append('file', file);
+            try {
+                const response = await fetch('/api/upload-media', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.file_id) {
+                    addMediaLink(data.url, isImage, formId, data.file_id);
+                } else {
+                    showAlert('❌ Ошибка загрузки медиа', 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        function addMediaLink(url, isImage, formId, fileId) {
+            const container = isImage ? document.getElementById(`image-links-${formId}`) : document.getElementById(`video-links-${formId}`);
+            const link = document.createElement('div');
+            link.className = 'media-link';
+            link.dataset.url = url;
+            link.dataset.fileId = fileId;
+            link.textContent = isImage ? '📷 Изображение' : '🎥 Видео';
+            link.onclick = () => window.open(url, '_blank');
+            container.appendChild(link);
+        }
+
+        // === Отправка всех товаров ===
         async function submitAllProducts() {
             const products = [];
-
+            const mediaUrls = [];
             for (let form of productForms) {
                 const offer_id = document.querySelector(`.offer-id[data-form-id="${form.id}"]`).value;
                 const name = document.querySelector(`.product-name[data-form-id="${form.id}"]`).value;
-                
                 if (!offer_id || !name || !form.category) {
                     showAlert(`⚠️ Заполни обязательные поля для товара #${productForms.indexOf(form) + 1}`, 'error');
                     return;
                 }
-
                 const characteristics = {};
                 document.querySelectorAll(`.characteristic[data-form-id="${form.id}"]`).forEach(el => {
                     characteristics[el.dataset.charId] = el.value;
                 });
-
+                // === Медиа ===
+                const images = Array.from(document.querySelectorAll(`#image-links-${form.id} .media-link[data-url]`))
+                    .map(el => el.dataset.url);
+                const videos = Array.from(document.querySelectorAll(`#video-links-${form.id} .media-link[data-url]`))
+                    .map(el => el.dataset.url);
+                mediaUrls.push(...images, ...videos);
+                const video_url = videos.length > 0 ? videos[0] : null;
                 const product = {
                     offer_id: offer_id,
                     name: name,
@@ -768,22 +752,21 @@
                     marketplace: currentMarketplace,
                     category: form.category ? (currentMarketplace === 'ozon' ? form.category.description_category_id : form.category.parentID) : null,
                     type: form.type ? form.type.type_id : null,
-                    characteristics: characteristics
+                    characteristics: characteristics,
+                    images: images,
+                    videos: videos,
+                    video_url: video_url
                 };
-
                 products.push(product);
             }
-
             if (products.length === 0) {
                 showAlert('⚠️ Добавь хотя бы один товар', 'error');
                 return;
             }
-
             try {
                 const endpoint = currentMarketplace === 'ozon' 
                     ? `${API_URL}/ozon/products/batch`
                     : `${API_URL}/wb/products/batch`;
-
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
@@ -792,15 +775,17 @@
                     },
                     body: JSON.stringify({ products })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     showAlert(`✅ Успешно загружено ${products.length} товаров!`, 'success');
                     document.getElementById('productsFormsContainer').innerHTML = '';
                     productForms = [];
                     formCounter = 0;
                     addProductForm();
+                    // Удаление медиа после загрузки
+                    if (mediaUrls.length > 0) {
+                        await deleteMedia(mediaUrls);
+                    }
                 } else {
                     showAlert('❌ Ошибка: ' + (data.detail || 'Unknown error'), 'error');
                 }
@@ -809,11 +794,31 @@
             }
         }
 
-        // ===== PRODUCTS TAB =====
+        // === Удаление медиа после создания товара ===
+        async function deleteMedia(fileUrls) {
+            try {
+                const response = await fetch('/api/delete-media', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ file_urls: fileUrls })
+                });
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    showAlert('✅ Медиа удалены', 'success');
+                } else {
+                    showAlert('❌ Ошибка удаления медиа', 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        // === PRODUCTS TAB ===
         async function loadProducts() {
             const container = document.getElementById('productsList');
             container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Загрузка товаров...</p></div>';
-
             try {
                 allProducts = [];
                 renderProducts(allProducts);
@@ -826,13 +831,11 @@
             const search = document.getElementById('searchInput').value.toLowerCase();
             const marketplace = document.getElementById('marketplaceFilter').value;
             const sortBy = document.getElementById('sortBy').value;
-
             let filtered = allProducts.filter(p => {
                 const matchSearch = !search || p.name.toLowerCase().includes(search) || p.offer_id.toLowerCase().includes(search);
                 const matchMarketplace = !marketplace || p.marketplace === marketplace;
                 return matchSearch && matchMarketplace;
             });
-
             if (sortBy === 'price') {
                 filtered.sort((a, b) => a.price - b.price);
             } else if (sortBy === 'stock') {
@@ -840,18 +843,15 @@
             } else {
                 filtered.sort((a, b) => a.name.localeCompare(b.name));
             }
-
             renderProducts(filtered);
         }
 
         function renderProducts(products) {
             const container = document.getElementById('productsList');
-            
             if (products.length === 0) {
                 container.innerHTML = '<div class="alert alert-error">📭 Товары не найдены</div>';
                 return;
             }
-
             let html = '<div>';
             products.forEach(product => {
                 const badge = product.marketplace === 'ozon' ? 'badge-ozon' : 'badge-wb';
@@ -882,7 +882,7 @@
             container.innerHTML = html;
         }
 
-        // ===== MODAL FUNCTIONS =====
+        // === MODAL FUNCTIONS ===
         function openBarcodeModal(productId) {
             currentProductForBarcode = productId;
             document.getElementById('barcodeModal').classList.add('active');
@@ -900,12 +900,10 @@
                 document.getElementById('barcodeModalError').innerHTML = '<div class="alert alert-error">⚠️ Заполни баркоды</div>';
                 return;
             }
-
             const barcodes = barcodeText.split('\n')
                 .map(b => b.trim())
                 .filter(b => b.length > 0)
                 .map(b => ({ barcode: b, sku: currentProductForBarcode }));
-
             try {
                 const response = await fetch(`${API_URL}/ozon/barcode/add`, {
                     method: 'POST',
@@ -915,9 +913,7 @@
                     },
                     body: JSON.stringify({ barcodes })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     showProductAlert(`✅ Успешно привязано ${barcodes.length} баркодов`, 'success');
                     closeBarcodeModal();
@@ -943,12 +939,10 @@
 
         async function generateBarcodes() {
             const count = parseInt(document.getElementById('barcodeCount').value);
-
             if (!count || count < 1 || count > 5000) {
                 document.getElementById('generateModalError').innerHTML = '<div class="alert alert-error">⚠️ Количество должно быть от 1 до 5000</div>';
                 return;
             }
-
             try {
                 const response = await fetch(`${API_URL}/wildberries/barcode/generate`, {
                     method: 'POST',
@@ -958,16 +952,13 @@
                     },
                     body: JSON.stringify({ count })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     const barcodes = data.data || [];
                     let barcodeList = '';
                     barcodes.forEach((barcode, i) => {
                         barcodeList += `${i + 1}. ${barcode}\n`;
                     });
-
                     document.getElementById('barcodeResult').value = barcodeList;
                     document.getElementById('generatedBarcodes').style.display = 'block';
                     showProductAlert(`✅ Сгенерировано ${count} баркодов`, 'success');
@@ -990,7 +981,7 @@
             }, 2000);
         }
 
-        // ===== BATCH UPLOAD =====
+        // === BATCH UPLOAD ===
         function openBatchModal() {
             document.getElementById('batchModal').classList.add('active');
             document.getElementById('batchInput').value = '';
@@ -1007,14 +998,12 @@
             const format = document.getElementById('batchFormat').value;
             const inputContainer = document.getElementById('batchInputContainer');
             const exampleContainer = document.getElementById('batchExampleContainer');
-            
             if (format === 'example') {
                 inputContainer.style.display = 'none';
                 exampleContainer.style.display = 'block';
             } else {
                 inputContainer.style.display = 'block';
                 exampleContainer.style.display = 'none';
-                
                 if (format === 'csv') {
                     document.getElementById('batchInput').placeholder = 'offer_id,name,price,stock,brand,barcode\nSKU001,Товар 1,5000,100,Бренд,4606400111111\nSKU002,Товар 2,3000,50,Бренд,4606400111112';
                 } else {
@@ -1026,14 +1015,11 @@
         async function submitBatchProducts() {
             const format = document.getElementById('batchFormat').value;
             const input = document.getElementById('batchInput').value.trim();
-
             if (!input) {
                 document.getElementById('batchModalError').innerHTML = '<div class="alert alert-error">⚠️ Заполни поле с данными</div>';
                 return;
             }
-
             let products = [];
-            
             try {
                 if (format === 'json') {
                     let parsed = JSON.parse(input);
@@ -1047,15 +1033,12 @@
                 } else if (format === 'csv') {
                     products = parseCSV(input);
                 }
-
                 if (products.length === 0) {
                     document.getElementById('batchModalError').innerHTML = '<div class="alert alert-error">⚠️ Не найдено товаров</div>';
                     return;
                 }
-
                 const selectedCategory = productForms[0] ? productForms[0].category : null;
                 const selectedType = productForms[0] ? productForms[0].type : null;
-
                 products = products.map(p => ({
                     ...p,
                     marketplace: currentMarketplace,
@@ -1063,11 +1046,9 @@
                     type: selectedType ? selectedType.type_id : null,
                     characteristics: {}
                 }));
-
                 const endpoint = currentMarketplace === 'ozon' 
                     ? `${API_URL}/ozon/products/batch`
                     : `${API_URL}/wb/products/batch`;
-
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
@@ -1076,9 +1057,7 @@
                     },
                     body: JSON.stringify({ products })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     showAlert(`✅ Успешно загружено ${products.length} товаров!`, 'success');
                     closeBatchModal();
@@ -1094,14 +1073,11 @@
         function parseCSV(csvText) {
             const lines = csvText.trim().split('\n');
             if (lines.length < 2) throw new Error('CSV должен содержать заголовок и данные');
-
             const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
             const products = [];
-
             for (let i = 1; i < lines.length; i++) {
                 const values = lines[i].split(',').map(v => v.trim());
                 const product = {};
-
                 headers.forEach((header, index) => {
                     if (header === 'price' || header === 'stock') {
                         product[header] = parseInt(values[index]) || 0;
@@ -1109,16 +1085,14 @@
                         product[header] = values[index] || '';
                     }
                 });
-
                 if (product.offer_id && product.name) {
                     products.push(product);
                 }
             }
-
             return products;
         }
 
-        // ===== ALERTS =====
+        // === ALERTS ===
         function showAlert(message, type) {
             const container = document.getElementById('alertContainer');
             const alertDiv = document.createElement('div');
@@ -1137,16 +1111,14 @@
             setTimeout(() => alertDiv.remove(), 4000);
         }
 
-        // ===== API KEYS =====
+        // === API KEYS ===
         async function saveOzonKeys() {
             const clientId = document.getElementById('ozonClientId').value;
             const apiKey = document.getElementById('ozonApiKey').value;
-
             if (!clientId || !apiKey) {
                 showAlert('⚠️ Заполни оба поля', 'error');
                 return;
             }
-
             try {
                 const response = await fetch(`${API_URL}/keys/save?marketplace=ozon`, {
                     method: 'POST',
@@ -1156,7 +1128,6 @@
                     },
                     body: JSON.stringify({ client_id: clientId, api_key: apiKey })
                 });
-
                 if (response.ok) {
                     showAlert('✅ Ozon ключи сохранены', 'success');
                     document.getElementById('ozonClientId').value = '';
@@ -1172,12 +1143,10 @@
 
         async function saveWbKeys() {
             const apiKey = document.getElementById('wbApiKey').value;
-
             if (!apiKey) {
                 showAlert('⚠️ Заполни API Key', 'error');
                 return;
             }
-
             try {
                 const response = await fetch(`${API_URL}/keys/save?marketplace=wildberries`, {
                     method: 'POST',
@@ -1187,7 +1156,6 @@
                     },
                     body: JSON.stringify({ api_key: apiKey })
                 });
-
                 if (response.ok) {
                     showAlert('✅ WB ключ сохранен', 'success');
                     document.getElementById('wbApiKey').value = '';

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -11,9 +11,21 @@ import hashlib
 import json
 from datetime import datetime, timedelta
 import jwt
+import requests
+import tempfile
+import subprocess
+from moviepy import ImageSequenceClip
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import os
+from typing import List, Dict
+
+app = FastAPI()
+
+# Хранилище для временных файлов
+temp_files = {}
 
 # ======================== CONFIG ========================
-
 SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
@@ -22,15 +34,16 @@ ACCESS_TOKEN_EXPIRE_HOURS = 24
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = "tngtech/deepseek-r1t2-chimera:free"
 
-# ======================== DATABASE ========================
+# Catbox.moe API Config
+CATBOX_USERHASH = "7efdb06212c7f378d525201d8"
 
+# ======================== DATABASE ========================
 DB_PATH = Path(__file__).parent.parent / "app.db"
 
 def init_db():
     """Инициализация базы данных"""
     conn = sqlite3.connect(str(DB_PATH))
     cursor = conn.cursor()
-    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +53,6 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS api_keys (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +65,6 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
-    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS product_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +78,6 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
-    
     conn.commit()
     conn.close()
     print(f"✅ Database initialized at {DB_PATH}")
@@ -75,7 +85,6 @@ def init_db():
 init_db()
 
 # ======================== MODELS ========================
-
 from pydantic import BaseModel
 
 class UserRegister(BaseModel):
@@ -112,8 +121,11 @@ class GenerateDescriptionRequest(BaseModel):
     key_features: Optional[List[str]] = []
     marketplace: str = "ozon"
 
-# ======================== FASTAPI APP ========================
+class GenerateCoverVideoRequest(BaseModel):
+    images: List[str]
+    duration: float = 5.0
 
+# ======================== FASTAPI APP ========================
 app = FastAPI(
     title="Ozon & Wildberries Product Manager v3.5",
     description="API с OpenRouter AI и категориями товаров",
@@ -135,7 +147,6 @@ BASE_DIR = Path(__file__).parent.parent
 FRONTEND_PATH = BASE_DIR / "frontend"
 
 # ======================== AUTH HELPERS ========================
-
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
 
@@ -143,7 +154,7 @@ def create_access_token(user_id: int, username: str) -> str:
     payload = {
         "user_id": user_id,
         "username": username,
-        "exp": datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
+        "exp": datetime.utcnow() + timedelta(hours=24)
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -157,9 +168,39 @@ def verify_token(token: str) -> dict:
 security = HTTPBearer()
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
-    return verify_token(credentials.credentials)
+    print(f"Received token: {credentials.credentials}")
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"Decoded payload: {payload}")
+        return payload
+    except jwt.InvalidTokenError:
+        print("Invalid token error")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 # ======================== DATABASE HELPERS ========================
+def upload_to_catbox(file_content, filename, content_type):
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=1,
+        status_forcelist=[429, 500, 502, 503, 504],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    files = {"fileToUpload": (filename, file_content, content_type)}
+    data = {
+        "reqtype": "fileupload",
+        "userhash": CATBOX_USERHASH
+    }
+    try:
+        response = session.post("https://catbox.moe/user/api.php", data=data, files=files, timeout=30)
+        if response.status_code == 200:
+            return response.text.strip()
+        else:
+            raise Exception(f"Upload failed: {response.status_code} - {response.text}")
+    except Exception as e:
+        raise Exception(f"Error uploading to catbox.moe: {str(e)}")
 
 def get_user_by_username(username: str) -> Optional[dict]:
     conn = sqlite3.connect(str(DB_PATH))
@@ -221,17 +262,14 @@ def save_product_history(user_id: int, marketplace: str, offer_id: str, product_
     conn.close()
 
 # ======================== AUTH ENDPOINTS ========================
-
 @app.post("/api/auth/register")
 async def register(user: UserRegister):
     if len(user.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
-    
     password_hash = hash_password(user.password)
     user_id = save_user(user.username, password_hash, user.email)
     token = create_access_token(user_id, user.username)
     print(f"✅ User registered: {user.username}")
-    
     return {
         "user_id": user_id,
         "username": user.username,
@@ -242,17 +280,13 @@ async def register(user: UserRegister):
 @app.post("/api/auth/login")
 async def login(user: UserLogin):
     db_user = get_user_by_username(user.username)
-    
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
     password_hash = hash_password(user.password)
     if password_hash != db_user["password_hash"]:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
     token = create_access_token(db_user["id"], user.username)
     print(f"✅ User logged in: {user.username}")
-    
     return {
         "user_id": db_user["id"],
         "username": user.username,
@@ -261,7 +295,6 @@ async def login(user: UserLogin):
     }
 
 # ======================== API KEYS ENDPOINTS ========================
-
 @app.post("/api/keys/save")
 async def save_keys(
     marketplace: str,
@@ -330,19 +363,13 @@ async def get_wildberries_categories(
     keys = get_api_keys(current_user["user_id"], "wildberries")
     if not keys or "api_key" not in keys:
         raise HTTPException(status_code=400, detail="Wildberries API key not configured")
-    
-    headers = {
-        "X-API-Key": keys["api_key"]
-    }
-    
+    headers = {"X-API-Key": keys["api_key"]}
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Получаем родительские категории
             response = await client.get(
                 "https://content-api.wildberries.ru/content/v2/object/parent/all",
                 headers=headers
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 print(f"✅ Wildberries categories loaded")
@@ -367,22 +394,12 @@ async def get_wildberries_subjects(
     keys = get_api_keys(current_user["user_id"], "wildberries")
     if not keys or "api_key" not in keys:
         raise HTTPException(status_code=400, detail="Wildberries API key not configured")
-    
-    headers = {
-        "X-API-Key": keys["api_key"]
-    }
-    
-    params = {
-        "limit": min(limit, 1000),
-        "offset": offset
-    }
-    
+    headers = {"X-API-Key": keys["api_key"]}
+    params = {"limit": min(limit, 1000), "offset": offset}
     if parent_id:
         params["parentID"] = parent_id
-    
     if name:
         params["name"] = name
-    
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
@@ -390,7 +407,6 @@ async def get_wildberries_subjects(
                 headers=headers,
                 params=params
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 print(f"✅ WB subjects loaded")
@@ -412,18 +428,13 @@ async def get_wildberries_characteristics(
     keys = get_api_keys(current_user["user_id"], "wildberries")
     if not keys or "api_key" not in keys:
         raise HTTPException(status_code=400, detail="Wildberries API key not configured")
-    
-    headers = {
-        "X-API-Key": keys["api_key"]
-    }
-    
+    headers = {"X-API-Key": keys["api_key"]}
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.get(
                 f"https://content-api.wildberries.ru/content/v2/object/charcs/{subject_id}",
                 headers=headers
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 print(f"✅ WB characteristics loaded for subject {subject_id}")
@@ -435,9 +446,8 @@ async def get_wildberries_characteristics(
     except Exception as e:
         print(f"❌ Error loading WB characteristics: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
-    
+
 # ======================== BARCODE ENDPOINTS ========================
-    
 @app.post("/api/ozon/barcode/add")
 async def add_ozon_barcode(
     request_data: dict,
@@ -447,17 +457,12 @@ async def add_ozon_barcode(
     keys = get_api_keys(current_user["user_id"], "ozon")
     if not keys or "api_key" not in keys or "client_id" not in keys:
         raise HTTPException(status_code=400, detail="Ozon API keys not configured")
-    
     headers = {
         "Client-Id": keys["client_id"],
         "Api-Key": keys["api_key"],
         "Content-Type": "application/json"
     }
-    
-    payload = {
-        "barcodes": request_data.get("barcodes", [])
-    }
-    
+    payload = {"barcodes": request_data.get("barcodes", [])}
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -465,7 +470,6 @@ async def add_ozon_barcode(
                 headers=headers,
                 json=payload
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 print(f"✅ Ozon barcodes added: {len(payload['barcodes'])} items")
@@ -487,17 +491,12 @@ async def generate_ozon_barcodes(
     keys = get_api_keys(current_user["user_id"], "ozon")
     if not keys or "api_key" not in keys or "client_id" not in keys:
         raise HTTPException(status_code=400, detail="Ozon API keys not configured")
-    
     headers = {
         "Client-Id": keys["client_id"],
         "Api-Key": keys["api_key"],
         "Content-Type": "application/json"
     }
-    
-    payload = {
-        "product_ids": [str(pid) for pid in request_data.get("product_ids", [])]
-    }
-    
+    payload = {"product_ids": [str(pid) for pid in request_data.get("product_ids", [])]}
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -505,7 +504,6 @@ async def generate_ozon_barcodes(
                 headers=headers,
                 json=payload
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 print(f"✅ Ozon barcodes generated for {len(payload['product_ids'])} products")
@@ -527,20 +525,11 @@ async def generate_wildberries_barcodes(
     keys = get_api_keys(current_user["user_id"], "wildberries")
     if not keys or "api_key" not in keys:
         raise HTTPException(status_code=400, detail="Wildberries API key not configured")
-    
-    headers = {
-        "Authorization": keys["api_key"],
-        "Content-Type": "application/json"
-    }
-    
+    headers = {"Authorization": keys["api_key"], "Content-Type": "application/json"}
     count = request_data.get("count", 1)
     if count < 1 or count > 5000:
         raise HTTPException(status_code=400, detail="Count must be between 1 and 5000")
-    
-    payload = {
-        "count": count
-    }
-    
+    payload = {"count": count}
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -548,7 +537,6 @@ async def generate_wildberries_barcodes(
                 headers=headers,
                 json=payload
             )
-            
             if response.status_code == 200:
                 data = response.json()
                 print(f"✅ WB barcodes generated: {count} items")
@@ -562,7 +550,6 @@ async def generate_wildberries_barcodes(
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 # ======================== OPENROUTER AI ENDPOINTS ========================
-
 async def generate_description_openrouter(
     product_name: str,
     brand: Optional[str] = None,
@@ -571,23 +558,18 @@ async def generate_description_openrouter(
     marketplace: str = "ozon"
 ) -> str:
     """Генерация описания товара с помощью OpenRouter AI"""
-    
     if not OPENROUTER_API_KEY:
         raise HTTPException(
             status_code=400,
             detail="OpenRouter API key not configured. Set OPENROUTER_API_KEY environment variable."
         )
-    
     features_text = ", ".join(key_features) if key_features else "не указаны"
     marketplace_name = "Ozon" if marketplace == "ozon" else "Wildberries"
-    
     prompt = f"""Напиши краткое и привлекательное описание товара для маркетплейса {marketplace_name}.
-
 Название товара: {product_name}
 Бренд: {brand or 'не указан'}
 Категория: {category or 'не указана'}
 Ключевые характеристики: {features_text}
-
 Требования:
 - Описание должно быть кратким (100-150 слов)
 - Описание должно быть привлекательным и информативным
@@ -595,29 +577,20 @@ async def generate_description_openrouter(
 - Избегай чрезмерно использовать восклицательные знаки
 - Используй профессиональный тон
 - Написано для {marketplace_name}
-
 Напиши только описание без дополнительных комментариев."""
-
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
         "HTTP-Referer": "http://localhost:8000",
         "X-Title": "Marketplace Manager"
     }
-
     payload = {
         "model": OPENROUTER_MODEL,
-        "messages": [
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
+        "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 1024,
         "top_p": 0.95
     }
-
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
@@ -625,10 +598,8 @@ async def generate_description_openrouter(
                 json=payload,
                 headers=headers
             )
-            
             if response.status_code == 200:
                 data = response.json()
-                
                 if "choices" in data and len(data["choices"]) > 0:
                     choice = data["choices"][0]
                     if "message" in choice and "content" in choice["message"]:
@@ -638,6 +609,8 @@ async def generate_description_openrouter(
                             return description
                         else:
                             raise HTTPException(status_code=500, detail="Empty response from OpenRouter (empty content)")
+                    else:
+                        raise HTTPException(status_code=500, detail="No choices in response from OpenRouter")
                 else:
                     raise HTTPException(status_code=500, detail="No choices in response from OpenRouter")
             else:
@@ -658,7 +631,6 @@ async def generate_description(
     current_user: dict = Depends(get_current_user)
 ):
     """Endpoint для генерации описания товара с помощью OpenRouter AI"""
-    
     try:
         description = await generate_description_openrouter(
             product_name=request.product_name,
@@ -667,19 +639,69 @@ async def generate_description(
             key_features=request.key_features,
             marketplace=request.marketplace
         )
-        
-        return {
-            "success": True,
-            "description": description
-        }
+        return {"success": True, "description": description}
     except HTTPException as e:
         raise e
     except Exception as e:
         print(f"❌ Error generating description: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-# ======================== PRODUCT ENDPOINTS ========================
+# ======================== VIDEO COVER GENERATION ========================
+from PIL import Image
 
+@app.post("/api/generate-video-cover")
+async def generate_video_cover(file_ids: List[str]):
+    """Генерация видеообложки из временных файлов"""
+    if len(file_ids) == 0:
+        raise HTTPException(status_code=400, detail="No images provided")
+    
+    # Получаем пути к временным файлам
+    image_files = []
+    for file_id in file_ids:
+        if file_id in temp_files:
+            image_files.append(temp_files[file_id])
+        else:
+            raise HTTPException(status_code=400, detail=f"File not found: {file_id}")
+    
+    if len(image_files) == 0:
+        raise HTTPException(status_code=400, detail="Failed to load any images")
+    
+    # Проверка размеров изображений
+    sizes = []
+    for image_path in image_files:
+        with Image.open(image_path) as img:
+            sizes.append(img.size)
+    if len(set(sizes)) > 1:
+        raise HTTPException(status_code=400, detail="All images must be the same size")
+    
+    # Создаём видеообложку
+    clip = ImageSequenceClip(image_files, fps=1.0)
+    clip = clip.with_duration(5.0)
+    video_path = tempfile.mktemp(suffix=".mp4")
+    clip.write_videofile(video_path, codec="libx264", fps=1.0)
+    
+    # Загружаем видео на catbox.moe
+    with open(video_path, "rb") as f:
+        file_content = f.read()
+    files = {"fileToUpload": ("cover_video.mp4", file_content, "video/mp4")}
+    data = {
+        "reqtype": "fileupload",
+        "userhash": "7efdb06212c7f378d525201d8"
+    }
+    response = requests.post("https://catbox.moe/user/api.php", data=data, files=files)
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Failed to upload video")
+    
+    # Удаляем временные файлы
+    for file_id in file_ids:
+        if file_id in temp_files:
+            os.remove(temp_files[file_id])
+            del temp_files[file_id]
+    os.remove(video_path)
+    
+    return {"video_url": response.text.strip()}
+
+# ======================== PRODUCT ENDPOINTS ========================
 def build_ozon_product(product: ProductCreate) -> dict:
     """Построение продукта для Ozon API"""
     ozon_product = {
@@ -689,30 +711,20 @@ def build_ozon_product(product: ProductCreate) -> dict:
         "price": str(int(product.price * 100)),
         "description": product.description or "",
     }
-    
     if product.images:
         ozon_product["images"] = [{"file_name": url} for url in product.images if url]
-        
         if product.primary_image and product.primary_image > 0:
             ozon_product["primary_image"] = {"file_name": product.images[product.primary_image - 1]}
-    
     if product.video_url:
         ozon_product["complex_attributes"] = [
             {
-                "complex_id": 100001,
-                "id": 21841,
+                "complex_id": 100002,
+                "id": 21845,
                 "values": [{"value": product.video_url}]
-            },
-            {
-                "complex_id": 100001,
-                "id": 21837,
-                "values": [{"value": "Video 1"}]
             }
         ]
-    
     if product.barcode:
         ozon_product["barcode"] = product.barcode
-    
     return ozon_product
 
 async def ozon_create_product(product: ProductCreate, client_id: str, api_key: str) -> dict:
@@ -723,7 +735,6 @@ async def ozon_create_product(product: ProductCreate, client_id: str, api_key: s
         "Api-Key": api_key,
         "Content-Type": "application/json"
     }
-    
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -754,16 +765,13 @@ async def wb_create_product(product: ProductCreate, api_key: str) -> dict:
             }
         ]
     }
-    
     if product.wb_images:
         wb_product["mediaFiles"] = [url for url in product.wb_images if url]
-    
     payload = [wb_product]
     headers = {
         "X-API-Key": api_key,
         "Content-Type": "application/json"
     }
-    
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -787,11 +795,9 @@ async def batch_create_ozon(
 ):
     if len(batch.products) > 100:
         raise HTTPException(status_code=400, detail="Maximum 100 products per batch")
-    
     keys = get_api_keys(current_user["user_id"], "ozon")
     if not keys or "client_id" not in keys or "api_key" not in keys:
         raise HTTPException(status_code=400, detail="Ozon API keys not configured")
-    
     results = []
     for product in batch.products:
         result = await ozon_create_product(product, keys["client_id"], keys["api_key"])
@@ -807,7 +813,6 @@ async def batch_create_ozon(
             "success" if result.get("success") else "failed",
             result
         )
-    
     print(f"✅ Batch created {len(batch.products)} products in Ozon")
     return {"total": len(batch.products), "results": results}
 
@@ -818,11 +823,9 @@ async def batch_create_wb(
 ):
     if len(batch.products) > 100:
         raise HTTPException(status_code=400, detail="Maximum 100 products per batch")
-    
     keys = get_api_keys(current_user["user_id"], "wildberries")
     if not keys or "api_key" not in keys:
         raise HTTPException(status_code=400, detail="Wildberries API key not configured")
-    
     results = []
     for product in batch.products:
         result = await wb_create_product(product, keys["api_key"])
@@ -838,12 +841,59 @@ async def batch_create_wb(
             "success" if result.get("success") else "failed",
             result
         )
-    
     print(f"✅ Batch created {len(batch.products)} products in Wildberries")
     return {"total": len(batch.products), "results": results}
 
-# ======================== STATIC FILES ========================
+# ======================== MEDIA UPLOAD ENDPOINT (Catbox.moe) ========================
+@app.post("/api/upload-media")
+async def upload_media(file: UploadFile = File(...)):
+    """Загрузка медиа на сервер и сохранение временного пути"""
+    try:
+        # Создаем временный файл
+        temp_dir = tempfile.mkdtemp()
+        temp_path = os.path.join(temp_dir, file.filename)
+        with open(temp_path, "wb") as f:
+            f.write(await file.read())
+        
+        # Загружаем файл на catbox.moe
+        with open(temp_path, "rb") as f:
+            file_content = f.read()
+        files = {"fileToUpload": (file.filename, file_content, file.content_type)}
+        data = {
+            "reqtype": "fileupload",
+            "userhash": "7efdb06212c7f378d525201d8"
+        }
+        response = requests.post("https://catbox.moe/user/api.php", data=data, files=files)
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to upload file")
+        
+        # Сохраняем путь во временное хранилище
+        file_id = str(id(file))
+        temp_files[file_id] = temp_path
+        
+        return {"file_id": file_id, "url": response.text.strip()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+@app.post("/api/delete-media")
+async def delete_media(file_urls: List[str]):
+    """Удаление файлов с catbox.moe"""
+    try:
+        file_names = [url.split("/")[-1] for url in file_urls]
+        data = {
+            "reqtype": "deletefiles",
+            "userhash": CATBOX_USERHASH,
+            "files": " ".join(file_names)
+        }
+        response = requests.post("https://catbox.moe/user/api.php", data=data)
+        if response.status_code == 200:
+            return {"status": "ok", "message": "Files deleted"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to delete media")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# ======================== STATIC FILES ========================
 @app.get("/")
 async def root():
     index_path = FRONTEND_PATH / "index.html"
@@ -877,7 +927,6 @@ async def health():
     return {"status": "ok", "version": "3.5.0"}
 
 # ======================== STARTUP/SHUTDOWN ========================
-
 @app.on_event("startup")
 async def startup():
     print(f"🚀 Application started (version 3.5.0)")
