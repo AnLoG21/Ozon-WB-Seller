@@ -295,6 +295,11 @@
                     // Сохраняем токен
                     localStorage.setItem('access_token', data.access_token);
                     
+                    // Сохраняем тему пользователя, если она есть в ответе
+                    if (data.theme) {
+                        localStorage.setItem('theme', data.theme);
+                    }
+                    
                     showAlert(`✅ Добро пожаловать, ${data.username}!`, 'success');
                     
                     // Переходим на dashboard через 0.5 секунды
@@ -346,6 +351,13 @@
                     
                     // Сохраняем токен
                     localStorage.setItem('access_token', data.access_token);
+                    
+                    // Сохраняем тему пользователя, если она есть в ответе (по умолчанию light)
+                    if (data.theme) {
+                        localStorage.setItem('theme', data.theme);
+                    } else {
+                        localStorage.setItem('theme', 'light');
+                    }
                     
                     showAlert(`✅ Аккаунт создан! Добро пожаловать, ${data.username}!`, 'success');
                     

@@ -3,17 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketplace Manager v3.6</title>
+    <title>Marketplace Manager</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        
+        /* Светлая тема (по умолчанию) */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f5f5f5; 
+            color: #333;
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        /* Тёмная тема */
+        body.dark-theme {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        body.dark-theme .card,
+        body.dark-theme .modal-content,
+        body.dark-theme .user-menu,
+        body.dark-theme .form-input,
+        body.dark-theme .form-select,
+        body.dark-theme .form-textarea,
+        body.dark-theme .marketplace-btn {
+            background: #2d2d2d;
+            color: #ffffff;
+        }
+        body.dark-theme .product-form-wrapper {
+            background: #252525;
+        }
+        body.dark-theme .product-form-wrapper.active {
+            background: #2d2d2d;
+        }
+        body.dark-theme .product-form-wrapper .form-group[style*="background: #f5f5f5"] {
+            background: #2a2a2a !important;
+            border: 1px solid #404040;
+        }
+        body.dark-theme .product-form-wrapper .form-group[style*="background: #f5f5f5"] small {
+            color: #b0b0b0 !important;
+        }
+        body.dark-theme .characteristics-section {
+            background: #252525;
+        }
+        body.dark-theme .tabs,
+        body.dark-theme .form-input,
+        body.dark-theme .form-select,
+        body.dark-theme .form-textarea,
+        body.dark-theme .product-form-wrapper,
+        body.dark-theme .marketplace-btn {
+            border-color: #404040;
+        }
+        body.dark-theme .tab-button {
+            color: #cccccc;
+        }
+        body.dark-theme .tab-button.active {
+            color: #7c8ef5;
+            border-bottom-color: #7c8ef5;
+        }
+        body.dark-theme h2,
+        body.dark-theme h3 {
+            color: #ffffff;
+        }
+        body.dark-theme h4 {
+            color: #cccccc;
+        }
+        body.dark-theme .section-title {
+            color: #7c8ef5;
+            border-bottom-color: #7c8ef5;
+        }
+        body.dark-theme .user-menu-item {
+            color: #ffffff;
+        }
+        body.dark-theme .user-menu-item:hover {
+            background: #252525;
+        }
+        body.dark-theme .user-menu-item:last-child {
+            color: #e74c3c;
+        }
+        body.dark-theme .user-menu-divider {
+            background: #404040;
+        }
+        body.dark-theme .copy-form-btn {
+            background: #2980b9;
+        }
+        body.dark-theme .copy-form-btn:hover {
+            background: #1f5f8b;
+        }
+        body.dark-theme pre {
+            background: #252525;
+            color: #ffffff;
+        }
+        body.dark-theme .media-block {
+            background: #252525;
+        }
+        body.dark-theme .loading {
+            color: #999999;
+        }
+        
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .navbar h1 { font-size: 1.5rem; }
-        .user-button { background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; transition: background 0.3s; }
+        .user-button { background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; transition: background 0.3s; position: relative; }
         .user-button:hover { background: rgba(255,255,255,0.3); }
+        .user-menu { position: absolute; top: 100%; right: 0; margin-top: 0.5rem; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); min-width: 200px; z-index: 1000; display: none; overflow: hidden; }
+        .user-menu.active { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .user-menu-item { padding: 0.75rem 1.5rem; cursor: pointer; transition: background 0.2s; border: none; background: none; width: 100%; text-align: left; font-size: 1rem; color: #333; display: flex; align-items: center; gap: 0.5rem; }
+        .user-menu-item:hover { background: #f5f5f5; }
+        .user-menu-item:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .user-menu-item:last-child { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-top: 1px solid #e0e0e0; color: #e74c3c; }
+        .user-menu-divider { height: 1px; background: #e0e0e0; margin: 0.25rem 0; }
         .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #ddd; overflow-x: auto; }
-        .tab-button { padding: 0.75rem 1.5rem; border: none; background: none; cursor: pointer; font-size: 1rem; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; }
+        .tab-button { padding: 0.75rem 1.5rem; border: none; background: none; cursor: pointer; font-size: 1rem; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; color: #333; }
         .tab-button.active { border-bottom-color: #667eea; color: #667eea; font-weight: 600; }
         .tab-content { display: none; animation: fadeIn 0.3s; }
         .tab-content.active { display: block; }
@@ -54,15 +156,32 @@
         h3 { margin-bottom: 1rem; color: #555; }
         h4 { margin-bottom: 1rem; color: #666; }
         hr { border: none; border-top: 1px solid #e0e0e0; margin: 2rem 0; }
-        .products-forms-container { max-height: 70vh; overflow-y: auto; padding-right: 1rem; }
+        .products-forms-container { padding-right: 1rem; }
         .product-form-wrapper { background: #f9f9f9; border: 2px solid #e0e0e0; border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; position: relative; }
         .product-form-wrapper.active { background: white; border-color: #667eea; }
         .product-form-number { display: inline-block; background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem; }
         .remove-form-btn { position: absolute; top: 1rem; right: 1rem; background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
         .remove-form-btn:hover { background: #c0392b; }
+        .copy-form-btn { position: absolute; top: 1rem; right: 7rem; background: #3498db; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .copy-form-btn:hover { background: #2980b9; }
         .media-block { margin-bottom: 1.5rem; padding: 1rem; background: #f0f0f0; border-radius: 8px; }
         .media-input { width: 100%; margin-bottom: 1rem; }
         .media-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .media-item { position: relative; display: inline-block; margin: 0.5rem; cursor: move; transition: opacity 0.2s, transform 0.2s; }
+        .media-item.dragging { opacity: 0.5; transform: scale(0.95); }
+        .media-item.drag-over { border: 2px dashed #667eea; background: rgba(102, 126, 234, 0.1); }
+        .media-item[draggable="true"] { cursor: grab; }
+        .media-item[draggable="true"]:active { cursor: grabbing; }
+        .media-thumbnail { width: 120px; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #ddd; transition: all 0.3s; }
+        .media-thumbnail:hover { border-color: #667eea; transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .media-thumbnail.video { border-color: #e12e00; }
+        .media-delete-btn { position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: all 0.3s; }
+        .media-delete-btn:hover { background: #c0392b; transform: scale(1.1); }
+        .media-modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); }
+        .media-modal.active { display: flex; align-items: center; justify-content: center; }
+        .media-modal-content { max-width: 90%; max-height: 90%; position: relative; }
+        .media-modal-content img, .media-modal-content video { max-width: 100%; max-height: 90vh; border-radius: 8px; }
+        .media-modal-close { position: absolute; top: -40px; right: 0; color: white; font-size: 2rem; cursor: pointer; }
         .media-link { background: #e0e0e0; padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; word-break: break-all; }
         .form-actions { display: flex; gap: 1rem; margin-top: 2rem; }
         .form-actions .btn { flex: 1; padding: 1rem; }
@@ -88,15 +207,24 @@
 </head>
 <body>
     <div class="navbar">
-        <h1>🏪 Marketplace Manager v3.6</h1>
-        <button class="user-button" onclick="logout()">👤 <span id="username">User</span> 🚪</button>
+        <h1>🏪 Marketplace Manager</h1>
+        <div style="position: relative;">
+            <button class="user-button" onclick="toggleUserMenu()">👤 <span id="username">User</span> ▼</button>
+            <div class="user-menu" id="userMenu">
+                <button class="user-menu-item" onclick="openProfileModal()">👤 Профиль</button>
+                <button class="user-menu-item" onclick="openHistoryModal()">📜 История</button>
+                <button class="user-menu-item" onclick="openTemplatesModal()">📋 Шаблоны</button>
+                <button class="user-menu-item" onclick="openSettingsModal()">⚙️ Настройки</button>
+                <div class="user-menu-divider"></div>
+                <button class="user-menu-item" onclick="logout()">🚪 Выйти</button>
+            </div>
+        </div>
     </div>
 
     <div class="container">
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab('create')">➕ Создать товар</button>
             <button class="tab-button" onclick="switchTab('products')">📦 Товары</button>
-            <button class="tab-button" onclick="switchTab('profile')">👤 Профиль</button>
         </div>
 
         <!-- TAB: Создать товар -->
@@ -110,10 +238,13 @@
                 <div id="alertContainer"></div>
                 <div class="products-forms-container" id="productsFormsContainer">
                 </div>
-                <div class="form-actions">
+                <div class="form-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button class="btn btn-secondary" onclick="addProductForm()">➕ Добавить товар</button>
                     <button class="btn btn-secondary" onclick="openBatchModal()">📦 Batch загрузка</button>
-                    <button class="btn btn-primary" onclick="submitAllProducts()">🚀 Загрузить все</button>
+                    <button class="btn btn-primary" id="submitAllBtn" onclick="submitAllProducts(event); return false;">🚀 Загрузить все</button>
+                    <button class="btn btn-secondary" onclick="exportProductsToCSV()">📥 Экспорт в CSV</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()">📤 Импорт из CSV</button>
+                    <input type="file" id="importFileInput" accept=".csv" style="display: none;" onchange="importProductsFromCSV(event)">
                 </div>
             </div>
         </div>
@@ -121,7 +252,14 @@
         <!-- TAB: Товары -->
         <div id="products" class="tab-content">
             <div class="card">
-                <h2>📦 Управление товарами</h2>
+                <h2>📊 Статистика и товары</h2>
+                <div id="statisticsDashboard" style="margin-bottom: 2rem;">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Загрузка статистики...</p>
+                    </div>
+                </div>
+                <h3>📦 Управление товарами</h3>
                 <div class="filters-row" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
                     <input type="text" class="form-input" id="searchInput" placeholder="🔍 Поиск по названию/SKU" onkeyup="filterProducts()" style="flex: 1;">
                     <select class="form-select" id="marketplaceFilter" onchange="filterProducts()" style="width: 12rem;">
@@ -144,33 +282,6 @@
             </div>
         </div>
 
-        <!-- TAB: Профиль -->
-        <div id="profile" class="tab-content">
-            <div class="card">
-                <h2>Профиль и API Ключи</h2>
-                <div style="margin-bottom: 2rem;">
-                    <h4>🔵 Ozon API Ключи</h4>
-                    <div class="form-group">
-                        <label class="form-label">Client ID</label>
-                        <input type="text" id="ozonClientId" class="form-input" placeholder="Введи Ozon Client ID">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">API Key</label>
-                        <input type="password" id="ozonApiKey" class="form-input" placeholder="Введи Ozon API Key">
-                    </div>
-                    <button class="btn btn-primary" onclick="saveOzonKeys()">💾 Сохранить Ozon ключи</button>
-                </div>
-                <hr>
-                <div style="margin-top: 2rem;">
-                    <h4>🔴 Wildberries API Ключ</h4>
-                    <div class="form-group">
-                        <label class="form-label">API Key</label>
-                        <input type="password" id="wbApiKey" class="form-input" placeholder="Введи Wildberries API Key">
-                    </div>
-                    <button class="btn btn-primary" onclick="saveWbKeys()">💾 Сохранить WB ключ</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Модальные окна -->
@@ -196,6 +307,173 @@
         </div>
     </div>
 
+    <!-- Модальное окно для просмотра медиа -->
+    <div id="mediaModal" class="media-modal" onclick="closeMediaModal()">
+        <div class="media-modal-content" id="mediaModalContent" onclick="event.stopPropagation()">
+            <span class="media-modal-close" onclick="closeMediaModal()">×</span>
+        </div>
+    </div>
+
+    <!-- Модальное окно профиля -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeProfileModal()">&times;</span>
+            <h2>👤 Профиль и API Ключи</h2>
+            <div style="margin-bottom: 2rem;">
+                <h4>🔵 Ozon API Ключи</h4>
+                <div class="form-group">
+                    <label class="form-label">Client ID</label>
+                    <input type="text" id="ozonClientId" class="form-input" placeholder="Введи Ozon Client ID">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" id="ozonApiKey" class="form-input" placeholder="Введи Ozon API Key">
+                </div>
+                <button class="btn btn-primary" onclick="saveOzonKeys()">💾 Сохранить Ozon ключи</button>
+            </div>
+            <hr>
+            <div style="margin-top: 2rem;">
+                <h4>🔴 Wildberries API Ключ</h4>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input type="password" id="wbApiKey" class="form-input" placeholder="Введи Wildberries API Key">
+                </div>
+                <button class="btn btn-primary" onclick="saveWbKeys()">💾 Сохранить WB ключ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно истории -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+            <span class="modal-close" onclick="closeHistoryModal()">&times;</span>
+            <h2>📜 История действий</h2>
+            <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                    <label class="form-label">Маркетплейс</label>
+                    <select id="historyMarketplaceFilter" class="form-select" onchange="loadUserHistory()">
+                        <option value="">Все</option>
+                        <option value="ozon">Ozon</option>
+                        <option value="wildberries">Wildberries</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                    <label class="form-label">Статус</label>
+                    <select id="historyStatusFilter" class="form-select" onchange="loadUserHistory()">
+                        <option value="">Все</option>
+                        <option value="success">✅ Успешно</option>
+                        <option value="updated">🔄 Обновлено</option>
+                        <option value="failed">❌ Ошибка</option>
+                        <option value="pending">⏳ В процессе</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                    <label class="form-label">Поиск (SKU/название)</label>
+                    <input type="text" id="historySearchFilter" class="form-input" placeholder="Поиск..." oninput="loadUserHistory()">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                    <label class="form-label">Дата от</label>
+                    <input type="date" id="historyDateFrom" class="form-input" onchange="loadUserHistory()">
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 150px;">
+                    <label class="form-label">Дата до</label>
+                    <input type="date" id="historyDateTo" class="form-input" onchange="loadUserHistory()">
+                </div>
+            </div>
+            <div id="historyContent" style="margin-top: 1rem;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка истории...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="modal-close" onclick="closeSettingsModal()">&times;</span>
+            <h2>⚙️ Настройки</h2>
+            <div style="margin-top: 2rem;">
+                <h4>🎨 Тема оформления</h4>
+                <div class="form-group">
+                    <label class="form-label">Выбери тему</label>
+                    <select id="themeSelect" class="form-select">
+                        <option value="light">☀️ Светлая</option>
+                        <option value="dark">🌙 Тёмная</option>
+                    </select>
+                </div>
+                <div style="margin-top: 2rem;">
+                    <button class="btn btn-primary" onclick="saveTheme()">💾 Сохранить тему</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно шаблонов -->
+    <div id="templatesModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <span class="modal-close" onclick="closeTemplatesModal()">&times;</span>
+            <h2>📋 Шаблоны товаров</h2>
+            <div style="margin-top: 1rem;">
+                <button class="btn btn-primary" onclick="openCreateTemplateModal()">➕ Создать шаблон</button>
+            </div>
+            <div id="templatesList" style="margin-top: 2rem;">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Загрузка шаблонов...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания/редактирования шаблона -->
+    <div id="templateEditModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <span class="modal-close" onclick="closeTemplateEditModal()">&times;</span>
+            <h2 id="templateEditTitle">➕ Создать шаблон</h2>
+            <div style="margin-top: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Название шаблона</label>
+                    <input type="text" id="templateName" class="form-input" placeholder="Например: Одежда Ozon">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea id="templateDescription" class="form-textarea" rows="2" placeholder="Описание шаблона (необязательно)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Маркетплейс</label>
+                    <select id="templateMarketplace" class="form-select">
+                        <option value="ozon">🔵 Ozon</option>
+                        <option value="wildberries">🔴 Wildberries</option>
+                    </select>
+                </div>
+                <hr>
+                <h4 style="margin-top: 1.5rem;">Поля шаблона</h4>
+                <div class="form-group">
+                    <label class="form-label">Бренд</label>
+                    <input type="text" id="templateBrand" class="form-input" placeholder="Бренд">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea id="templateDesc" class="form-textarea" rows="4" placeholder="Описание товара"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Цена (по умолчанию)</label>
+                    <input type="number" id="templatePrice" class="form-input" placeholder="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Остаток (по умолчанию)</label>
+                    <input type="number" id="templateStock" class="form-input" placeholder="0" min="0">
+                </div>
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="saveTemplate()">💾 Сохранить шаблон</button>
+                    <button class="btn btn-secondary" onclick="closeTemplateEditModal()">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = window.location.origin + '/api';
         const MAX_FORMS = 100;
@@ -207,8 +485,21 @@
 
         if (!token) window.location.href = '/index.html';
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Применяем тему сразу при загрузке скрипта (до DOMContentLoaded)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        })();
+
+        document.addEventListener('DOMContentLoaded', async () => {
             loadUsername();
+            await loadTheme();
+            // Загружаем шаблоны сразу при загрузке страницы
+            await loadTemplates();
+            console.log('Templates loaded on page load:', templates.length);
+            // Создаем форму после загрузки шаблонов
             addProductForm();
         });
 
@@ -230,6 +521,666 @@
             if (tab === 'products') loadProducts();
         }
 
+        // Выпадающее меню пользователя
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('active');
+        }
+
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('userMenu');
+            const button = document.querySelector('.user-button');
+            if (menu && button && !menu.contains(e.target) && !button.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Модальные окна профиля и истории
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.add('active');
+            document.getElementById('userMenu').classList.remove('active');
+            loadApiKeys();
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        function openHistoryModal() {
+            document.getElementById('historyModal').classList.add('active');
+            document.getElementById('userMenu').classList.remove('active');
+            loadUserHistory();
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.remove('active');
+        }
+
+        async function loadUserHistory() {
+            const historyContent = document.getElementById('historyContent');
+            historyContent.innerHTML = '<div class="loading"><div class="spinner"></div><p>Загрузка истории...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/products/history`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load history');
+                
+                const data = await response.json();
+                let history = data.history || [];
+                
+                // Применяем фильтры
+                const marketplaceFilter = document.getElementById('historyMarketplaceFilter')?.value || '';
+                const statusFilter = document.getElementById('historyStatusFilter')?.value || '';
+                const searchFilter = document.getElementById('historySearchFilter')?.value.toLowerCase() || '';
+                const dateFrom = document.getElementById('historyDateFrom')?.value || '';
+                const dateTo = document.getElementById('historyDateTo')?.value || '';
+                
+                history = history.filter(item => {
+                    if (marketplaceFilter && item.marketplace !== marketplaceFilter) return false;
+                    if (statusFilter && item.status !== statusFilter) return false;
+                    if (searchFilter) {
+                        const productData = typeof item.product_data === 'string' ? JSON.parse(item.product_data) : item.product_data;
+                        const name = (productData.name || productData.title || '').toLowerCase();
+                        const offerId = (item.offer_id || '').toLowerCase();
+                        if (!name.includes(searchFilter) && !offerId.includes(searchFilter)) return false;
+                    }
+                    if (dateFrom || dateTo) {
+                        const itemDate = new Date(item.created_at).toISOString().split('T')[0];
+                        if (dateFrom && itemDate < dateFrom) return false;
+                        if (dateTo && itemDate > dateTo) return false;
+                    }
+                    return true;
+                });
+                
+                if (history.length === 0) {
+                    historyContent.innerHTML = '<div class="alert alert-info">История пуста или не найдено по фильтрам</div>';
+                    return;
+                }
+                
+                let html = `<div style="margin-bottom: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                    <strong>Найдено записей: ${history.length}</strong>
+                </div>`;
+                html += '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+                
+                history.forEach((item, index) => {
+                    const productData = typeof item.product_data === 'string' ? JSON.parse(item.product_data) : item.product_data;
+                    const responseData = item.response ? (typeof item.response === 'string' ? JSON.parse(item.response) : item.response) : null;
+                    const status = item.status || 'unknown';
+                    const createdAt = new Date(item.created_at).toLocaleString('ru-RU');
+                    
+                    const statusBadge = status === 'success' ? 
+                        '<span class="badge badge-success" style="background: #27ae60; color: white;">✅ Успешно</span>' :
+                        status === 'updated' ?
+                        '<span class="badge badge-info" style="background: #3498db; color: white;">🔄 Обновлено</span>' :
+                        status === 'failed' || status === 'update_failed' ?
+                        '<span class="badge badge-danger" style="background: #e74c3c; color: white;">❌ Ошибка</span>' :
+                        '<span class="badge" style="background: #95a5a6; color: white;">⏳ В процессе</span>';
+                    
+                    const marketplaceBadge = item.marketplace === 'ozon' ? 
+                        '<span class="badge badge-ozon">🔵 Ozon</span>' : 
+                        '<span class="badge badge-wb">🔴 Wildberries</span>';
+                    
+                    html += `
+                        <div class="card" style="padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <div>
+                                    <strong>${productData.name || productData.title || 'Без названия'}</strong>
+                                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        ${marketplaceBadge}
+                                        ${statusBadge}
+                                    </div>
+                                </div>
+                                <div style="text-align: right; color: #999; font-size: 0.9rem;">
+                                    ${createdAt}
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 1rem;">
+                                <strong>Артикул:</strong> ${item.offer_id}
+                            </div>
+                            ${responseData && responseData.error ? `
+                                <div class="alert alert-error" style="margin-top: 1rem;">
+                                    <strong>Ошибка:</strong> ${typeof responseData.error === 'object' ? JSON.stringify(responseData.error) : responseData.error}
+                                </div>
+                            ` : ''}
+                            <details style="margin-top: 1rem;">
+                                <summary style="cursor: pointer; color: #667eea; font-weight: 600;">📋 Детали товара</summary>
+                                <pre style="margin-top: 0.5rem; max-height: 200px; overflow-y: auto;">${JSON.stringify(productData, null, 2)}</pre>
+                            </details>
+                            ${responseData ? `
+                                <details style="margin-top: 0.5rem;">
+                                    <summary style="cursor: pointer; color: #667eea; font-weight: 600;">📥 Ответ API</summary>
+                                    <pre style="margin-top: 0.5rem; max-height: 200px; overflow-y: auto;">${JSON.stringify(responseData, null, 2)}</pre>
+                                </details>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                historyContent.innerHTML = html;
+            } catch (e) {
+                historyContent.innerHTML = `<div class="alert alert-error">Ошибка загрузки истории: ${e.message}</div>`;
+            }
+        }
+
+        async function loadApiKeys() {
+            try {
+                // Загружаем ключи Ozon
+                const ozonResponse = await fetch(`${API_URL}/keys/ozon`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (ozonResponse.ok) {
+                    const ozonData = await ozonResponse.json();
+                    if (ozonData.client_id) document.getElementById('ozonClientId').value = ozonData.client_id;
+                    if (ozonData.api_key) document.getElementById('ozonApiKey').value = ozonData.api_key;
+                }
+                
+                // Загружаем ключи Wildberries
+                const wbResponse = await fetch(`${API_URL}/keys/wildberries`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (wbResponse.ok) {
+                    const wbData = await wbResponse.json();
+                    if (wbData.api_key) document.getElementById('wbApiKey').value = wbData.api_key;
+                }
+            } catch (e) {
+                console.error('Error loading API keys:', e);
+            }
+        }
+
+        // === НАСТРОЙКИ И ТЕМЫ ===
+        async function loadTheme() {
+            // Сначала применяем тему из localStorage (быстрая загрузка)
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
+            
+            // Затем загружаем актуальную тему из БД и обновляем, если отличается
+            try {
+                const response = await fetch(`${API_URL}/user/theme`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const theme = data.theme || 'light';
+                    applyTheme(theme);
+                    localStorage.setItem('theme', theme); // Синхронизируем с localStorage
+                    const themeSelect = document.getElementById('themeSelect');
+                    if (themeSelect) themeSelect.value = theme;
+                } else {
+                    // Используем тему из localStorage
+                    const themeSelect = document.getElementById('themeSelect');
+                    if (themeSelect) themeSelect.value = savedTheme;
+                }
+            } catch (e) {
+                console.error('Error loading theme:', e);
+                // Используем тему из localStorage
+                const themeSelect = document.getElementById('themeSelect');
+                if (themeSelect) themeSelect.value = savedTheme;
+            }
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+
+        async function saveTheme() {
+            const themeSelect = document.getElementById('themeSelect');
+            const theme = themeSelect.value;
+            
+            if (!theme || !['light', 'dark'].includes(theme)) {
+                showAlert('⚠️ Выбери тему', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/user/theme`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ theme: theme })
+                });
+                
+                if (response.ok) {
+                    applyTheme(theme);
+                    localStorage.setItem('theme', theme);
+                    showAlert('✅ Тема сохранена', 'success');
+                    closeSettingsModal();
+                } else {
+                    const data = await response.json();
+                    showAlert('❌ Ошибка: ' + (data.detail || 'Не удалось сохранить тему'), 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.add('active');
+            document.getElementById('userMenu').classList.remove('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // === ШАБЛОНЫ ===
+        let templates = [];
+        let editingTemplateId = null;
+
+        async function loadTemplates() {
+            try {
+                const response = await fetch(`${API_URL}/templates`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    templates = data.templates || [];
+                    console.log(`Loaded ${templates.length} templates:`, templates);
+                    
+                    // После загрузки шаблонов заполняем селекторы во всех существующих формах через DOM
+                    console.log('Filling template selects in existing forms...');
+                    setTimeout(async () => {
+                        const allForms = document.querySelectorAll('.product-form-wrapper');
+                        console.log(`Found ${allForms.length} forms in DOM to populate`);
+                        for (const formElement of allForms) {
+                            const formIdMatch = formElement.id.match(/form-(\d+)/);
+                            if (formIdMatch) {
+                                const formId = parseInt(formIdMatch[1]);
+                                console.log(`Populating template select for form ${formId}`);
+                                await populateTemplateSelect(formId);
+                            }
+                        }
+                    }, 300);
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error loading templates:', response.status, errorData);
+                    templates = [];
+                }
+            } catch (e) {
+                console.error('Error loading templates:', e);
+                templates = [];
+            }
+        }
+
+        async function openTemplatesModal() {
+            document.getElementById('templatesModal').classList.add('active');
+            document.getElementById('userMenu').classList.remove('active');
+            await loadTemplates();
+            renderTemplatesList();
+            // После загрузки шаблонов обновляем все селекторы в формах
+            setTimeout(async () => {
+                const allForms = document.querySelectorAll('.product-form-wrapper');
+                for (const formElement of allForms) {
+                    const formIdMatch = formElement.id.match(/form-(\d+)/);
+                    if (formIdMatch) {
+                        const formId = parseInt(formIdMatch[1]);
+                        await populateTemplateSelect(formId);
+                    }
+                }
+            }, 100);
+        }
+
+        function closeTemplatesModal() {
+            document.getElementById('templatesModal').classList.remove('active');
+        }
+
+        function renderTemplatesList() {
+            const container = document.getElementById('templatesList');
+            
+            if (templates.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">Шаблоны не созданы. Создай первый шаблон!</div>';
+                return;
+            }
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+            
+            templates.forEach((template) => {
+                const marketplaceBadge = template.marketplace === 'ozon' ? 
+                    '<span class="badge badge-ozon">🔵 Ozon</span>' : 
+                    '<span class="badge badge-wb">🔴 Wildberries</span>';
+                
+                html += `
+                    <div class="card" style="padding: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h3 style="margin-bottom: 0.5rem;">${template.name}</h3>
+                                ${template.description ? `<p style="color: #666; margin-bottom: 0.5rem;">${template.description}</p>` : ''}
+                                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    ${marketplaceBadge}
+                                    ${template.brand ? `<span class="badge" style="background: #e0e0e0; color: #333;">🏷️ ${template.brand}</span>` : ''}
+                                    ${template.price ? `<span class="badge" style="background: #e0e0e0; color: #333;">💰 ${template.price} ₽</span>` : ''}
+                                    ${template.stock ? `<span class="badge" style="background: #e0e0e0; color: #333;">📦 ${template.stock} шт</span>` : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary btn-small" onclick="editTemplate(${template.id})">✏️ Редактировать</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteTemplate(${template.id})">🗑️ Удалить</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function openCreateTemplateModal() {
+            editingTemplateId = null;
+            document.getElementById('templateEditTitle').textContent = '➕ Создать шаблон';
+            document.getElementById('templateName').value = '';
+            document.getElementById('templateDescription').value = '';
+            document.getElementById('templateMarketplace').value = 'ozon';
+            document.getElementById('templateBrand').value = '';
+            document.getElementById('templateDesc').value = '';
+            document.getElementById('templatePrice').value = '';
+            document.getElementById('templateStock').value = '';
+            document.getElementById('templateEditModal').classList.add('active');
+        }
+
+        function editTemplate(templateId) {
+            const template = templates.find(t => t.id === templateId);
+            if (!template) {
+                showAlert('⚠️ Шаблон не найден', 'error');
+                return;
+            }
+            editingTemplateId = templateId;
+            document.getElementById('templateEditTitle').textContent = '✏️ Редактировать шаблон';
+            document.getElementById('templateName').value = template.name || '';
+            document.getElementById('templateDescription').value = template.description || '';
+            document.getElementById('templateMarketplace').value = template.marketplace || 'ozon';
+            document.getElementById('templateBrand').value = template.brand || '';
+            document.getElementById('templateDesc').value = template.description_text || '';
+            document.getElementById('templatePrice').value = template.price || '';
+            document.getElementById('templateStock').value = template.stock || '';
+            document.getElementById('templateEditModal').classList.add('active');
+        }
+
+        function closeTemplateEditModal() {
+            document.getElementById('templateEditModal').classList.remove('active');
+            editingTemplateId = null;
+        }
+
+        async function saveTemplate() {
+            const name = document.getElementById('templateName').value.trim();
+            if (!name) {
+                showAlert('⚠️ Введи название шаблона', 'error');
+                return;
+            }
+            
+            const template = {
+                name: name,
+                description: document.getElementById('templateDescription').value.trim() || null,
+                marketplace: document.getElementById('templateMarketplace').value,
+                brand: document.getElementById('templateBrand').value.trim() || null,
+                description_text: document.getElementById('templateDesc').value.trim() || null,
+                price: parseFloat(document.getElementById('templatePrice').value) || 0,
+                stock: parseInt(document.getElementById('templateStock').value) || 0
+            };
+            
+            try {
+                let response;
+                if (editingTemplateId !== null) {
+                    // Обновление существующего шаблона
+                    response = await fetch(`${API_URL}/templates/${editingTemplateId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(template)
+                    });
+                } else {
+                    // Создание нового шаблона
+                    response = await fetch(`${API_URL}/templates`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(template)
+                    });
+                }
+                
+                if (response.ok) {
+                    showAlert(editingTemplateId !== null ? '✅ Шаблон обновлен' : '✅ Шаблон создан', 'success');
+                    closeTemplateEditModal();
+                    await loadTemplates();
+                    renderTemplatesList();
+                } else {
+                    const data = await response.json();
+                    showAlert('❌ Ошибка: ' + (data.detail || 'Не удалось сохранить шаблон'), 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteTemplate(templateId) {
+            const template = templates.find(t => t.id === templateId);
+            if (!template) {
+                showAlert('⚠️ Шаблон не найден', 'error');
+                return;
+            }
+            
+            if (!confirm(`Удалить шаблон "${template.name}"?`)) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/templates/${templateId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showAlert('✅ Шаблон удален', 'success');
+                    await loadTemplates();
+                    renderTemplatesList();
+                } else {
+                    const data = await response.json();
+                    showAlert('❌ Ошибка: ' + (data.detail || 'Не удалось удалить шаблон'), 'error');
+                }
+            } catch (e) {
+                showAlert('❌ Ошибка: ' + e.message, 'error');
+            }
+        }
+
+        // Заполнение выпадающего списка шаблонов для формы (каждая форма делает свой запрос)
+        async function populateTemplateSelect(formId) {
+            console.log(`=== populateTemplateSelect for form ${formId} ===`);
+            
+            // Пробуем найти селект несколько раз с задержкой
+            let select = document.querySelector(`.template-select[data-form-id="${formId}"]`);
+            let attempts = 0;
+            while (!select && attempts < 5) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                select = document.querySelector(`.template-select[data-form-id="${formId}"]`);
+                attempts++;
+            }
+            
+            if (!select) {
+                console.error(`Template select not found for form ${formId} after ${attempts} attempts`);
+                // Пробуем найти по другому селектору
+                select = document.querySelector(`select[data-form-id="${formId}"].template-select`);
+                if (!select) {
+                    console.error(`Template select still not found for form ${formId}`);
+                    return;
+                }
+            }
+            
+            console.log(`Found select for form ${formId}, current marketplace: ${currentMarketplace}`);
+            
+            // Очищаем список
+            select.innerHTML = '<option value="">-- Загрузка шаблонов... --</option>';
+            
+            // Каждая форма делает свой запрос к API
+            try {
+                console.log(`Fetching templates for form ${formId} with marketplace=${currentMarketplace}`);
+                console.log(`API_URL: ${API_URL}, token exists: ${!!token}`);
+                const response = await fetch(`${API_URL}/templates?marketplace=${currentMarketplace}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log(`Response status for form ${formId}: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const formTemplates = data.templates || [];
+                    console.log(`✅ Loaded ${formTemplates.length} templates for form ${formId}:`, formTemplates);
+                    
+                    // Временно отключаем onchange, чтобы не вызвать applyTemplateToForm при заполнении
+                    const originalOnchange = select.onchange;
+                    select.onchange = null;
+                    
+                    // Очищаем список
+                    select.innerHTML = '<option value="">-- Выбери шаблон --</option>';
+                    
+                    if (formTemplates.length === 0) {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = '-- Нет шаблонов для этого маркетплейса --';
+                        option.disabled = true;
+                        select.appendChild(option);
+                        console.warn(`No templates found for marketplace ${currentMarketplace}`);
+                    } else {
+                        formTemplates.forEach(template => {
+                            const option = document.createElement('option');
+                            option.value = template.id;
+                            option.textContent = template.name;
+                            select.appendChild(option);
+                            console.log(`Added template option: ${template.id} - ${template.name}`);
+                        });
+                        console.log(`✅ Successfully populated ${formTemplates.length} templates in select for form ${formId}`);
+                    }
+                    
+                    // Восстанавливаем onchange после заполнения
+                    setTimeout(() => {
+                        select.onchange = originalOnchange;
+                    }, 100);
+                    
+                    // Обновляем глобальную переменную для совместимости
+                    templates = formTemplates;
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error(`Error loading templates for form ${formId}:`, response.status, errorData);
+                    select.innerHTML = '<option value="">-- Ошибка загрузки шаблонов --</option>';
+                }
+            } catch (e) {
+                console.error(`Error loading templates for form ${formId}:`, e);
+                select.innerHTML = '<option value="">-- Ошибка загрузки шаблонов --</option>';
+            }
+        }
+
+        // Применение шаблона к конкретной форме
+        async function applyTemplateToForm(formId, templateId) {
+            console.log(`=== applyTemplateToForm called ===`);
+            console.log(`formId: ${formId}, templateId: ${templateId} (type: ${typeof templateId})`);
+            
+            if (!templateId || templateId === '') {
+                console.log('Template ID is empty, returning');
+                return;
+            }
+            
+            // Убеждаемся, что шаблоны загружены
+            if (templates.length === 0) {
+                console.log('Templates array is empty, loading...');
+                await loadTemplates();
+            }
+            
+            console.log(`Looking for template with id=${templateId} (type: ${typeof templateId})`);
+            console.log('Available templates:', templates.map(t => ({ id: t.id, name: t.name, idType: typeof t.id })));
+            
+            const template = templates.find(t => {
+                const match = t.id === parseInt(templateId) || t.id === templateId || String(t.id) === String(templateId);
+                console.log(`Checking template ${t.id} (${typeof t.id}): ${t.id} === ${templateId} (${typeof templateId}) = ${match}`);
+                return match;
+            });
+            
+            if (!template) {
+                console.error(`Template not found! Looking for id=${templateId}, available ids:`, templates.map(t => t.id));
+                showAlert('⚠️ Шаблон не найден', 'error');
+                return;
+            }
+            
+            console.log('Found template:', template);
+            
+            // Проверяем, что маркетплейс совпадает
+            if (template.marketplace !== currentMarketplace) {
+                showAlert(`⚠️ Шаблон для маркетплейса ${template.marketplace === 'ozon' ? 'Ozon' : 'Wildberries'}, а текущий маркетплейс ${currentMarketplace === 'ozon' ? 'Ozon' : 'Wildberries'}`, 'error');
+                // Сбрасываем выбор
+                const select = document.querySelector(`.template-select[data-form-id="${formId}"]`);
+                if (select) select.value = '';
+                return;
+            }
+            
+            // Применяем значения шаблона
+            if (template.brand) {
+                const brandEl = document.querySelector(`.brand[data-form-id="${formId}"]`);
+                if (brandEl) brandEl.value = template.brand;
+            }
+            
+            if (template.description_text) {
+                const descEl = document.querySelector(`.description[data-form-id="${formId}"]`);
+                if (descEl) descEl.value = template.description_text;
+            }
+            
+            if (template.price) {
+                const priceEl = document.querySelector(`.price[data-form-id="${formId}"]`);
+                if (priceEl) priceEl.value = template.price;
+            }
+            
+            if (template.stock) {
+                const stockEl = document.querySelector(`.stock[data-form-id="${formId}"]`);
+                if (stockEl) stockEl.value = template.stock;
+            }
+            
+            showAlert(`✅ Шаблон "${template.name}" применен к товару`, 'success');
+        }
+
+        // Очистка полей шаблона из формы
+        function clearTemplateFromForm(formId) {
+            const brandEl = document.querySelector(`.brand[data-form-id="${formId}"]`);
+            if (brandEl) brandEl.value = '';
+            
+            const descEl = document.querySelector(`.description[data-form-id="${formId}"]`);
+            if (descEl) descEl.value = '';
+            
+            const priceEl = document.querySelector(`.price[data-form-id="${formId}"]`);
+            if (priceEl) priceEl.value = '';
+            
+            const stockEl = document.querySelector(`.stock[data-form-id="${formId}"]`);
+            if (stockEl) stockEl.value = '';
+            
+            // Сбрасываем выбор шаблона
+            const select = document.querySelector(`.template-select[data-form-id="${formId}"]`);
+            if (select) select.value = '';
+            
+            showAlert('✅ Поля шаблона очищены', 'success');
+        }
+
+
         function addProductForm() {
             if (productForms.length >= MAX_FORMS) {
                 showAlert(`⚠️ Лимит достигнут! Максимум ${MAX_FORMS} товаров за раз`, 'warning');
@@ -240,7 +1191,8 @@
 
             const formHTML = `
                 <div class="product-form-wrapper" id="form-${formId}">
-                    <div class="product-form-number">Товар #${productForms.length += 1}</div>
+                    <div class="product-form-number">Товар #${productForms.length + 1}</div>
+                    <button type="button" class="copy-form-btn" onclick="duplicateProductForm(${formId})" title="Копировать товар">📋 Копировать</button>
                     <button type="button" class="remove-form-btn" onclick="removeProductForm(${formId})">✕ Удалить</button>
 
                     <div class="form-group">
@@ -258,6 +1210,19 @@
                     </div>
 
                     <div class="characteristics-container-${formId}"></div>
+
+                    <hr style="margin: 1.5rem 0;">
+
+                    <div class="form-group" style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <label class="form-label">📄 Шаблон товара</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <select class="form-select template-select" data-form-id="${formId}" onchange="applyTemplateToForm(${formId}, this.value)" style="flex: 1; min-width: 200px;">
+                                <option value="">-- Выбери шаблон --</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-small" onclick="clearTemplateFromForm(${formId})" style="white-space: nowrap;">🗑️ Очистить</button>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 0.5rem;">Применение шаблона заполнит поля: бренд, описание, цена, остаток</small>
+                    </div>
 
                     <hr style="margin: 1.5rem 0;">
 
@@ -312,6 +1277,7 @@
                     <div class="media-block">
                         <div class="section-title">📷 Фото</div>
                         <input type="file" class="media-input" data-form-id="${formId}" multiple accept="image/*" onchange="handleImageSelect(event, ${formId})">
+                        <small style="color: #666; display: block; margin-top: 0.5rem; margin-bottom: 0.5rem;">💡 Перетащите изображения для изменения порядка</small>
                         <div class="media-links" id="image-links-${formId}"></div>
                     </div>
                     <div class="media-block">
@@ -319,13 +1285,244 @@
                         <input type="file" class="media-input" data-form-id="${formId}" multiple accept="video/*" onchange="handleVideoSelect(event, ${formId})">
                         <div class="media-links" id="video-links-${formId}"></div>
                     </div>
-                    <button type="button" class="btn btn-secondary btn-small" onclick="generateVideoCover(${formId})" style="margin-top: 0.5rem;">🎥 Сгенерировать видеообложку</button>
+                    <div class="media-block">
+                        <div class="section-title">🎬 Видеообложка</div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="generateVideoCover(${formId})" style="margin-bottom: 0.5rem;">🎥 Сгенерировать видеообложку</button>
+                        <div class="media-links" id="video-cover-links-${formId}"></div>
+                    </div>
                 </div>
             `;
             container.innerHTML += formHTML;
-            populateCategorySelect(formId);
+            
+            // Пытаемся заполнить категории, но не прерываем выполнение при ошибке
+            try {
+                populateCategorySelect(formId);
+            } catch (error) {
+                console.warn(`[Form ${formId}] Could not populate categories (this is OK if API keys are not set):`, error);
+            }
+            
             productForms.push({ id: formId, category: null, type: null });
             localImagePaths[formId] = [];
+            
+            // Загружаем шаблоны для выпадающего списка сразу после добавления формы
+            // Используем более надежный способ - ждем появления селектора в DOM
+            (async () => {
+                console.log(`[Form ${formId}] Starting template loading...`);
+                let select = null;
+                let attempts = 0;
+                const maxAttempts = 20;
+                
+                // Ждем появления селектора в DOM
+                while (!select && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    select = document.querySelector(`.template-select[data-form-id="${formId}"]`);
+                    attempts++;
+                    if (attempts % 5 === 0) {
+                        console.log(`[Form ${formId}] Still waiting for select (attempt ${attempts}/${maxAttempts})...`);
+                    }
+                }
+                
+                if (select) {
+                    console.log(`[Form ${formId}] ✅ Select found after ${attempts} attempts, loading templates...`);
+                    try {
+                        await populateTemplateSelect(formId);
+                        console.log(`[Form ${formId}] ✅ Templates loaded successfully`);
+                    } catch (error) {
+                        console.error(`[Form ${formId}] ❌ Error loading templates:`, error);
+                        // Пробуем еще раз через большую задержку
+                        setTimeout(async () => {
+                            console.log(`[Form ${formId}] Retrying template load...`);
+                            try {
+                                await populateTemplateSelect(formId);
+                            } catch (retryError) {
+                                console.error(`[Form ${formId}] ❌ Retry also failed:`, retryError);
+                            }
+                        }, 500);
+                    }
+                } else {
+                    console.error(`[Form ${formId}] ❌ Select not found after ${attempts} attempts`);
+                    // Последняя попытка через большую задержку
+                    setTimeout(async () => {
+                        select = document.querySelector(`.template-select[data-form-id="${formId}"]`);
+                        if (select) {
+                            console.log(`[Form ${formId}] ✅ Select found on final attempt, loading templates...`);
+                            try {
+                                await populateTemplateSelect(formId);
+                            } catch (error) {
+                                console.error(`[Form ${formId}] ❌ Error on final attempt:`, error);
+                            }
+                        } else {
+                            console.error(`[Form ${formId}] ❌ Select still not found on final attempt`);
+                        }
+                    }, 1000);
+                }
+            })();
+        }
+
+        function duplicateProductForm(formId) {
+            // Получаем все данные из текущей формы
+            const form = document.getElementById(`form-${formId}`);
+            if (!form) {
+                showAlert('⚠️ Форма не найдена', 'error');
+                return;
+            }
+            
+            // Создаем новую форму
+            addProductForm();
+            
+            // Ждем, пока новая форма появится в DOM
+            setTimeout(() => {
+                const newFormId = formCounter - 1; // Последний созданный ID
+                const newForm = document.getElementById(`form-${newFormId}`);
+                if (!newForm) {
+                    console.error('Новая форма не найдена');
+                    return;
+                }
+                
+                // Копируем данные из старой формы в новую
+                // SKU/Offer ID - добавляем "_copy" к оригинальному значению
+                const oldOfferId = form.querySelector(`.offer-id[data-form-id="${formId}"]`)?.value || '';
+                const newOfferIdEl = newForm.querySelector(`.offer-id[data-form-id="${newFormId}"]`);
+                if (newOfferIdEl) {
+                    newOfferIdEl.value = oldOfferId ? `${oldOfferId}_copy` : '';
+                }
+                
+                // Название товара
+                const oldName = form.querySelector(`.product-name[data-form-id="${formId}"]`)?.value || '';
+                const newNameEl = newForm.querySelector(`.product-name[data-form-id="${newFormId}"]`);
+                if (newNameEl) newNameEl.value = oldName;
+                
+                // Цена
+                const oldPrice = form.querySelector(`.price[data-form-id="${formId}"]`)?.value || '';
+                const newPriceEl = newForm.querySelector(`.price[data-form-id="${newFormId}"]`);
+                if (newPriceEl) newPriceEl.value = oldPrice;
+                
+                // Остаток
+                const oldStock = form.querySelector(`.stock[data-form-id="${formId}"]`)?.value || '';
+                const newStockEl = newForm.querySelector(`.stock[data-form-id="${newFormId}"]`);
+                if (newStockEl) newStockEl.value = oldStock;
+                
+                // Бренд
+                const oldBrand = form.querySelector(`.brand[data-form-id="${formId}"]`)?.value || '';
+                const newBrandEl = newForm.querySelector(`.brand[data-form-id="${newFormId}"]`);
+                if (newBrandEl) newBrandEl.value = oldBrand;
+                
+                // Баркод
+                const oldBarcode = form.querySelector(`.barcode[data-form-id="${formId}"]`)?.value || '';
+                const newBarcodeEl = newForm.querySelector(`.barcode[data-form-id="${newFormId}"]`);
+                if (newBarcodeEl) newBarcodeEl.value = oldBarcode;
+                
+                // Описание
+                const oldDesc = form.querySelector(`.description[data-form-id="${formId}"]`)?.value || '';
+                const newDescEl = newForm.querySelector(`.description[data-form-id="${newFormId}"]`);
+                if (newDescEl) newDescEl.value = oldDesc;
+                
+                // Категория
+                const oldCategory = form.querySelector(`.category-select[data-form-id="${formId}"]`)?.value || '';
+                const newCategoryEl = newForm.querySelector(`.category-select[data-form-id="${newFormId}"]`);
+                if (newCategoryEl && oldCategory) {
+                    newCategoryEl.value = oldCategory;
+                    // Триггерим событие изменения категории
+                    newCategoryEl.dispatchEvent(new Event('change'));
+                }
+                
+                // Тип товара
+                const oldType = form.querySelector(`.type-select[data-form-id="${formId}"]`)?.value || '';
+                const newTypeEl = newForm.querySelector(`.type-select[data-form-id="${newFormId}"]`);
+                if (newTypeEl && oldType) {
+                    setTimeout(() => {
+                        newTypeEl.value = oldType;
+                        newTypeEl.dispatchEvent(new Event('change'));
+                    }, 500);
+                }
+                
+                // Копируем изображения
+                const oldImageLinks = form.querySelector(`#image-links-${formId}`);
+                if (oldImageLinks) {
+                    const imageItems = oldImageLinks.querySelectorAll('.media-item[data-url]');
+                    const imageUrls = Array.from(imageItems).map(item => item.dataset.url);
+                    
+                    if (imageUrls.length > 0) {
+                        const newImageLinks = newForm.querySelector(`#image-links-${newFormId}`);
+                        if (newImageLinks) {
+                            // Используем функцию addMediaLinkToContainer для правильного создания элементов с drag-and-drop
+                            imageUrls.forEach((url, index) => {
+                                // Получаем fileId из старого элемента, если есть
+                                const oldItem = Array.from(imageItems)[index];
+                                const fileId = oldItem?.dataset?.fileId || null;
+                                setTimeout(() => {
+                                    addMediaLinkToContainer(url, true, newFormId, fileId, newImageLinks);
+                                }, index * 100);
+                            });
+                            localImagePaths[newFormId] = [...imageUrls];
+                        }
+                    }
+                }
+                
+                // Копируем видео
+                const oldVideoLinks = form.querySelector(`#video-links-${formId}`);
+                if (oldVideoLinks) {
+                    const videoUrls = [];
+                    oldVideoLinks.querySelectorAll('a[href]').forEach(link => {
+                        const url = link.getAttribute('href');
+                        if (url) videoUrls.push(url);
+                    });
+                    
+                    if (videoUrls.length > 0) {
+                        const newVideoLinks = newForm.querySelector(`#video-links-${newFormId}`);
+                        if (newVideoLinks) {
+                            videoUrls.forEach(url => {
+                                const videoDiv = document.createElement('div');
+                                videoDiv.className = 'media-item';
+                                videoDiv.innerHTML = `
+                                    <video src="${url}" controls style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="openMediaModal('${url}')"></video>
+                                    <button type="button" onclick="removeMedia('${url}', ${newFormId}, 'video')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
+                                `;
+                                newVideoLinks.appendChild(videoDiv);
+                            });
+                        }
+                    }
+                }
+                
+                // Копируем видеообложку
+                const oldVideoCoverLinks = form.querySelector(`#video-cover-links-${formId}`);
+                if (oldVideoCoverLinks) {
+                    const videoCoverUrls = [];
+                    oldVideoCoverLinks.querySelectorAll('a[href]').forEach(link => {
+                        const url = link.getAttribute('href');
+                        if (url) videoCoverUrls.push(url);
+                    });
+                    
+                    if (videoCoverUrls.length > 0) {
+                        const newVideoCoverLinks = newForm.querySelector(`#video-cover-links-${newFormId}`);
+                        if (newVideoCoverLinks) {
+                            videoCoverUrls.forEach(url => {
+                                const videoDiv = document.createElement('div');
+                                videoDiv.className = 'media-item';
+                                videoDiv.innerHTML = `
+                                    <video src="${url}" controls style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="openMediaModal('${url}')"></video>
+                                    <button type="button" onclick="removeMedia('${url}', ${newFormId}, 'video-cover')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
+                                `;
+                                newVideoCoverLinks.appendChild(videoDiv);
+                            });
+                        }
+                    }
+                }
+                
+                // Копируем выбранный шаблон
+                const oldTemplate = form.querySelector(`.template-select[data-form-id="${formId}"]`)?.value || '';
+                const newTemplateEl = newForm.querySelector(`.template-select[data-form-id="${newFormId}"]`);
+                if (newTemplateEl && oldTemplate) {
+                    setTimeout(() => {
+                        newTemplateEl.value = oldTemplate;
+                    }, 1000);
+                }
+                
+                showAlert('✅ Товар скопирован! Не забудьте изменить SKU перед загрузкой.', 'success');
+                
+                // Прокручиваем к новой форме
+                newForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
         }
 
         function removeProductForm(formId) {
@@ -356,6 +1553,18 @@
                 form.category = null;
                 form.type = null;
             });
+            // Обновляем списки шаблонов во всех формах через DOM (каждая форма делает свой запрос)
+            setTimeout(() => {
+                const allForms = document.querySelectorAll('.product-form-wrapper');
+                console.log(`Updating template selects for ${allForms.length} forms after marketplace change to ${marketplace}`);
+                allForms.forEach(formElement => {
+                    const formIdMatch = formElement.id.match(/form-(\d+)/);
+                    if (formIdMatch) {
+                        const formId = parseInt(formIdMatch[1]);
+                        populateTemplateSelect(formId);
+                    }
+                });
+            }, 200);
             productForms.forEach(form => {
                 const select = document.querySelector(`select.category-select[data-form-id="${form.id}"]`);
                 if (select) select.value = '';
@@ -634,8 +1843,9 @@
         // === Генерация видеообложки ===
         async function generateVideoCover(formId) {
             const container = document.getElementById(`image-links-${formId}`);
-            const fileIds = Array.from(container.querySelectorAll('.media-link[data-file-id]'))
-                .map(el => el.dataset.fileId);
+            const fileIds = Array.from(container.querySelectorAll('.media-item[data-file-id]'))
+                .map(el => el.dataset.fileId)
+                .filter(id => id); // Фильтруем пустые значения
             if (fileIds.length === 0) {
                 showAlert('⚠️ Загрузи хотя бы одно изображение', 'error');
                 return;
@@ -647,22 +1857,20 @@
                 const response = await fetch('/api/generate-video-cover', {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(fileIds)
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    const videoContainer = document.getElementById(`video-links-${formId}`);
-                    const link = document.createElement('div');
-                    link.className = 'media-link';
-                    link.dataset.url = data.video_url;
-                    link.textContent = '🎥 Видеообложка';
-                    link.onclick = () => window.open(data.video_url, '_blank');
-                    videoContainer.appendChild(link);
+                    // Добавляем видеообложку в отдельный блок
+                    const coverContainer = document.getElementById(`video-cover-links-${formId}`);
+                    addMediaLinkToContainer(data.video_url, false, formId, null, coverContainer);
                     showAlert('✅ Видеообложка сгенерирована', 'success');
                 } else {
-                    showAlert('❌ Ошибка генерации видеообложки', 'error');
+                    const errorData = await response.json().catch(() => ({ detail: 'Неизвестная ошибка' }));
+                    showAlert('❌ Ошибка: ' + (errorData.detail || 'Ошибка генерации видеообложки'), 'error');
                 }
             } catch (e) {
                 showAlert('❌ Ошибка: ' + e.message, 'error');
@@ -688,15 +1896,22 @@
             }
         }
 
-        // === Загрузка медиа (catbox.moe) ===
+        // === Загрузка медиа (Яндекс Диск) ===
         async function uploadMedia(file, formId, isImage) {
             const formData = new FormData();
             formData.append('file', file);
             try {
                 const response = await fetch('/api/upload-media', {
                     method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: formData
                 });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Ошибка загрузки медиа' }));
+                    throw new Error(errorData.detail || 'Ошибка загрузки медиа');
+                }
                 const data = await response.json();
                 if (data.file_id) {
                     addMediaLink(data.url, isImage, formId, data.file_id);
@@ -710,37 +1925,373 @@
 
         function addMediaLink(url, isImage, formId, fileId) {
             const container = isImage ? document.getElementById(`image-links-${formId}`) : document.getElementById(`video-links-${formId}`);
-            const link = document.createElement('div');
-            link.className = 'media-link';
-            link.dataset.url = url;
-            link.dataset.fileId = fileId;
-            link.textContent = isImage ? '📷 Изображение' : '🎥 Видео';
-            link.onclick = () => window.open(url, '_blank');
-            container.appendChild(link);
+            addMediaLinkToContainer(url, isImage, formId, fileId, container);
+        }
+
+        function addMediaLinkToContainer(url, isImage, formId, fileId, container) {
+            // Создаем элемент медиа с миниатюрой
+            const mediaItem = document.createElement('div');
+            mediaItem.className = 'media-item';
+            mediaItem.dataset.url = url;
+            mediaItem.dataset.fileId = fileId;
+            
+            if (isImage) {
+                // Делаем изображения перетаскиваемыми
+                mediaItem.draggable = true;
+                mediaItem.dataset.index = container.children.length; // Индекс для отслеживания позиции
+                
+                // Обработчики drag-and-drop для изображений
+                mediaItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', url);
+                    mediaItem.classList.add('dragging');
+                    e.dataTransfer.setData('dragIndex', Array.from(container.children).indexOf(mediaItem));
+                });
+                
+                mediaItem.addEventListener('dragend', (e) => {
+                    mediaItem.classList.remove('dragging');
+                    // Убираем класс drag-over со всех элементов
+                    container.querySelectorAll('.media-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                });
+                
+                mediaItem.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    
+                    const draggingItem = container.querySelector('.dragging');
+                    if (!draggingItem || draggingItem === mediaItem) return;
+                    
+                    const afterElement = getDragAfterElement(container, e.clientY);
+                    if (afterElement == null) {
+                        container.appendChild(draggingItem);
+                    } else {
+                        container.insertBefore(draggingItem, afterElement);
+                    }
+                    
+                    mediaItem.classList.add('drag-over');
+                });
+                
+                mediaItem.addEventListener('dragleave', (e) => {
+                    mediaItem.classList.remove('drag-over');
+                });
+                
+                mediaItem.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mediaItem.classList.remove('drag-over');
+                    
+                    const draggedUrl = e.dataTransfer.getData('text/plain');
+                    const draggedItem = container.querySelector(`.media-item[data-url="${draggedUrl}"]`);
+                    
+                    if (draggedItem && draggedItem !== mediaItem) {
+                        const allItems = Array.from(container.querySelectorAll('.media-item'));
+                        const draggedIndex = allItems.indexOf(draggedItem);
+                        const targetIndex = allItems.indexOf(mediaItem);
+                        
+                        if (draggedIndex !== -1 && targetIndex !== -1) {
+                            if (draggedIndex < targetIndex) {
+                                // Перемещаем вниз
+                                container.insertBefore(draggedItem, mediaItem.nextSibling);
+                            } else {
+                                // Перемещаем вверх
+                                container.insertBefore(draggedItem, mediaItem);
+                            }
+                            
+                            // Обновляем порядок в localImagePaths
+                            updateImageOrder(formId, container);
+                            showAlert('✅ Порядок изображений изменен', 'success');
+                        }
+                    }
+                });
+                
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'media-thumbnail';
+                img.alt = 'Изображение';
+                img.onclick = () => openMediaModal(url, 'image');
+                // Обработка ошибок загрузки изображения
+                img.onerror = function() {
+                    console.error('Failed to load image:', url);
+                    // Предотвращаем бесконечный цикл
+                    this.onerror = null;
+                    // Показываем placeholder
+                    this.style.background = '#f0f0f0';
+                    this.style.display = 'flex';
+                    this.style.alignItems = 'center';
+                    this.style.justifyContent = 'center';
+                    this.style.color = '#999';
+                    this.alt = 'Ошибка загрузки изображения';
+                    // Показываем иконку ошибки
+                    this.innerHTML = '❌';
+                };
+                img.onload = function() {
+                    console.log('✅ Image loaded successfully:', url);
+                };
+                mediaItem.appendChild(img);
+            } else {
+                const video = document.createElement('video');
+                video.src = url;
+                video.className = 'media-thumbnail video';
+                video.controls = false;
+                video.muted = true;
+                video.onclick = () => openMediaModal(url, 'video');
+                // Создаем миниатюру для видео (первый кадр)
+                video.onloadedmetadata = () => {
+                    video.currentTime = 0.1;
+                };
+                // Обработка ошибок загрузки видео
+                video.onerror = function() {
+                    console.error('Failed to load video:', url);
+                    // Показываем placeholder при ошибке
+                    this.style.background = '#f0f0f0';
+                    this.style.display = 'flex';
+                    this.style.alignItems = 'center';
+                    this.style.justifyContent = 'center';
+                    this.style.color = '#999';
+                };
+                mediaItem.appendChild(video);
+            }
+            
+            // Кнопка удаления
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'media-delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteMediaItem(url, formId, isImage, fileId);
+            };
+            mediaItem.appendChild(deleteBtn);
+            
+            container.appendChild(mediaItem);
+            
+            // Если это изображение, обновляем порядок в localImagePaths
+            if (isImage && localImagePaths[formId]) {
+                updateImageOrder(formId, container);
+            }
+        }
+        
+        // Функция для обновления порядка изображений в localImagePaths
+        function updateImageOrder(formId, container) {
+            const imageItems = Array.from(container.querySelectorAll('.media-item[data-url]'));
+            const orderedUrls = imageItems.map(item => item.dataset.url);
+            
+            if (localImagePaths[formId]) {
+                // Обновляем массив, сохраняя только те URL, которые есть в контейнере
+                localImagePaths[formId] = orderedUrls;
+                console.log(`[Form ${formId}] Image order updated:`, orderedUrls);
+            }
+        }
+        
+        // Вспомогательная функция для определения позиции вставки при drag
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.media-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function openMediaModal(url, type) {
+            const modal = document.getElementById('mediaModal');
+            const content = document.getElementById('mediaModalContent');
+            content.innerHTML = '';
+            
+            if (type === 'image') {
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '90vh';
+                img.style.borderRadius = '8px';
+                img.onerror = function() {
+                    console.error('Failed to load image in modal:', url);
+                    // Предотвращаем бесконечный цикл
+                    this.onerror = null;
+                    content.innerHTML = '<p style="color: white;">Ошибка загрузки изображения. <a href="' + url + '" target="_blank" style="color: #667eea;">Открыть по ссылке</a></p>';
+                };
+                content.appendChild(img);
+            } else {
+                const video = document.createElement('video');
+                video.src = url;
+                video.controls = true;
+                video.style.width = '100%';
+                video.style.maxHeight = '90vh';
+                video.onerror = function() {
+                    console.error('Failed to load video in modal:', url);
+                    content.innerHTML = '<p style="color: white;">Ошибка загрузки видео. Попробуйте открыть по ссылке.</p>';
+                };
+                content.appendChild(video);
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeMediaModal() {
+            document.getElementById('mediaModal').classList.remove('active');
+        }
+
+        async function deleteMediaItem(url, formId, isImage, fileId) {
+            if (!confirm('Удалить этот файл?')) return;
+            
+            try {
+                const response = await fetch('/api/delete-media', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ file_urls: [url] })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'ok' || response.status === 200) {
+                    // Удаляем элемент из DOM (проверяем все возможные контейнеры)
+                    const containers = [
+                        document.getElementById(`image-links-${formId}`),
+                        document.getElementById(`video-links-${formId}`),
+                        document.getElementById(`video-cover-links-${formId}`)
+                    ];
+                    for (const container of containers) {
+                        if (container) {
+                            const item = container.querySelector(`[data-url="${url}"]`);
+                            if (item) {
+                                item.remove();
+                                break;
+                            }
+                        }
+                    }
+                    showAlert('✅ Файл удален', 'success');
+                } else {
+                    const errorMsg = data.detail || data.message || 'Ошибка удаления файла';
+                    showAlert('❌ Ошибка: ' + errorMsg, 'error');
+                }
+            } catch (e) {
+                // Даже если запрос не удался, удаляем элемент из DOM (оптимистичное обновление)
+                const containers = [
+                    document.getElementById(`image-links-${formId}`),
+                    document.getElementById(`video-links-${formId}`),
+                    document.getElementById(`video-cover-links-${formId}`)
+                ];
+                for (const container of containers) {
+                    if (container) {
+                        const item = container.querySelector(`[data-url="${url}"]`);
+                        if (item) {
+                            item.remove();
+                            break;
+                        }
+                    }
+                }
+                showAlert('⚠️ Файл удален локально, но может остаться на сервере', 'error');
+            }
         }
 
         // === Отправка всех товаров ===
-        async function submitAllProducts() {
+        async function submitAllProducts(event) {
+            // Предотвращаем двойной вызов
+            if (event) {
+                event.preventDefault();
+            }
+            
+            console.log('🚀 submitAllProducts called');
+            console.log('📋 productForms:', productForms);
+            console.log('📋 productForms length:', productForms.length);
+            
+            if (productForms.length === 0) {
+                showAlert('⚠️ Добавь хотя бы один товар', 'error');
+                return;
+            }
+            
             const products = [];
             const mediaUrls = [];
-            for (let form of productForms) {
-                const offer_id = document.querySelector(`.offer-id[data-form-id="${form.id}"]`).value;
-                const name = document.querySelector(`.product-name[data-form-id="${form.id}"]`).value;
-                if (!offer_id || !name || !form.category) {
-                    showAlert(`⚠️ Заполни обязательные поля для товара #${productForms.indexOf(form) + 1}`, 'error');
-                    return;
+            let submitButton = null;
+            
+            try {
+            
+            for (let i = 0; i < productForms.length; i++) {
+                const form = productForms[i];
+                console.log(`📝 Processing form ${i + 1}:`, form);
+                
+                // Проверяем, что форма существует и имеет id
+                if (!form || !form.id) {
+                    console.error(`❌ Form ${i + 1} is invalid:`, form);
+                    showAlert(`⚠️ Форма товара #${i + 1} повреждена. Обнови страницу.`, 'error');
+                    continue; // Пропускаем эту форму и продолжаем со следующей
+                }
+                
+                const offerIdEl = document.querySelector(`.offer-id[data-form-id="${form.id}"]`);
+                const nameEl = document.querySelector(`.product-name[data-form-id="${form.id}"]`);
+                
+                if (!offerIdEl || !nameEl) {
+                    console.error(`❌ Form elements not found for form ${i + 1} (id: ${form.id})`);
+                    showAlert(`⚠️ Форма товара #${i + 1} не найдена. Обнови страницу.`, 'error');
+                    continue; // Пропускаем эту форму и продолжаем со следующей
+                }
+                
+                const offer_id = offerIdEl.value.trim();
+                const name = nameEl.value.trim();
+                
+                console.log(`  - offer_id: "${offer_id}"`);
+                console.log(`  - name: "${name}"`);
+                console.log(`  - category:`, form.category);
+                console.log(`  - type:`, form.type);
+                
+                if (!offer_id) {
+                    showAlert(`⚠️ Заполни артикул (offer_id) для товара #${i + 1}`, 'error');
+                    continue; // Пропускаем эту форму и продолжаем со следующей
+                }
+                
+                if (!name) {
+                    showAlert(`⚠️ Заполни название товара для товара #${i + 1}`, 'error');
+                    continue; // Пропускаем эту форму и продолжаем со следующей
+                }
+                
+                if (!form.category || (typeof form.category === 'object' && !form.category.description_category_id && !form.category.parentID && !form.category.id)) {
+                    showAlert(`⚠️ Выбери категорию для товара #${i + 1}`, 'error');
+                    continue; // Пропускаем эту форму и продолжаем со следующей
                 }
                 const characteristics = {};
+                // Собираем характеристики и проверяем обязательные
+                const requiredChars = [];
                 document.querySelectorAll(`.characteristic[data-form-id="${form.id}"]`).forEach(el => {
-                    characteristics[el.dataset.charId] = el.value;
+                    const charId = el.dataset.charId;
+                    const charName = el.dataset.charName || '';
+                    const value = el.value.trim();
+                    const isRequired = el.hasAttribute('required');
+                    
+                    if (value) {
+                        characteristics[charId] = value;
+                    } else if (isRequired) {
+                        requiredChars.push(charName || `Характеристика #${charId}`);
+                    }
                 });
+                
+                // Проверяем обязательные характеристики
+                if (requiredChars.length > 0) {
+                    showAlert(`⚠️ Заполни обязательные характеристики для товара #${i + 1}: ${requiredChars.join(', ')}`, 'error');
+                    continue;
+                }
                 // === Медиа ===
-                const images = Array.from(document.querySelectorAll(`#image-links-${form.id} .media-link[data-url]`))
+                const images = Array.from(document.querySelectorAll(`#image-links-${form.id} .media-item[data-url]`))
                     .map(el => el.dataset.url);
-                const videos = Array.from(document.querySelectorAll(`#video-links-${form.id} .media-link[data-url]`))
+                const videos = Array.from(document.querySelectorAll(`#video-links-${form.id} .media-item[data-url]`))
                     .map(el => el.dataset.url);
+                // Видеообложка отдельно
+                const videoCovers = Array.from(document.querySelectorAll(`#video-cover-links-${form.id} .media-item[data-url]`))
+                    .map(el => el.dataset.url);
+                // Добавляем видеообложку к видео, если она есть
+                if (videoCovers.length > 0) {
+                    videos.push(...videoCovers);
+                }
                 mediaUrls.push(...images, ...videos);
-                const video_url = videos.length > 0 ? videos[0] : null;
+                // Используем видеообложку как основное видео, если она есть
+                const video_url = videoCovers.length > 0 ? videoCovers[0] : (videos.length > 0 ? videos[0] : null);
                 const product = {
                     offer_id: offer_id,
                     name: name,
@@ -750,8 +2301,14 @@
                     brand: document.querySelector(`.brand[data-form-id="${form.id}"]`).value,
                     description: document.querySelector(`.description[data-form-id="${form.id}"]`).value,
                     marketplace: currentMarketplace,
-                    category: form.category ? (currentMarketplace === 'ozon' ? form.category.description_category_id : form.category.parentID) : null,
-                    type: form.type ? form.type.type_id : null,
+                    category: (form.category && typeof form.category === 'object') 
+                        ? (currentMarketplace === 'ozon' 
+                            ? (form.category.description_category_id || form.category.category_id || null) 
+                            : (form.category.parentID || form.category.id || null))
+                        : null,
+                    type: (form.type && typeof form.type === 'object' && form.type.type_id) 
+                        ? form.type.type_id 
+                        : null,
                     characteristics: characteristics,
                     images: images,
                     videos: videos,
@@ -760,13 +2317,27 @@
                 products.push(product);
             }
             if (products.length === 0) {
-                showAlert('⚠️ Добавь хотя бы один товар', 'error');
+                showAlert('⚠️ Не удалось собрать данные товаров. Проверь заполнение форм.', 'error');
                 return;
             }
-            try {
+            
+                console.log(`✅ Собрано ${products.length} товаров для отправки`);
+                console.log('📦 Products data:', products);
+                
+                // Показываем индикатор загрузки
+                submitButton = event?.target || document.getElementById('submitAllBtn') || document.querySelector('button.btn-primary');
+                const originalText = submitButton?.textContent || '🚀 Загрузить все';
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = '⏳ Загружаю...';
+                }
                 const endpoint = currentMarketplace === 'ozon' 
                     ? `${API_URL}/ozon/products/batch`
                     : `${API_URL}/wb/products/batch`;
+                
+                console.log(`📤 Sending to: ${endpoint}`);
+                console.log(`📦 Payload:`, { products });
+                
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
@@ -775,22 +2346,75 @@
                     },
                     body: JSON.stringify({ products })
                 });
+                
+                console.log(`📥 Response status: ${response.status}`);
+                
                 const data = await response.json();
+                console.log('📥 Response data:', data);
+                
                 if (response.ok) {
-                    showAlert(`✅ Успешно загружено ${products.length} товаров!`, 'success');
-                    document.getElementById('productsFormsContainer').innerHTML = '';
-                    productForms = [];
-                    formCounter = 0;
-                    addProductForm();
-                    // Удаление медиа после загрузки
-                    if (mediaUrls.length > 0) {
-                        await deleteMedia(mediaUrls);
+                    // Проверяем результаты
+                    const successCount = data.success || 0;
+                    const failedCount = data.failed || 0;
+                    const totalCount = data.total || products.length;
+                    
+                    if (data.validation_errors && data.validation_errors.length > 0) {
+                        // Есть ошибки валидации
+                        let errorMsg = `⚠️ Найдено ${data.validation_errors.length} товаров с ошибками:\n`;
+                        data.validation_errors.forEach((err, idx) => {
+                            errorMsg += `${idx + 1}. ${err.offer_id}: ${err.errors.join(', ')}\n`;
+                        });
+                        showAlert(errorMsg, 'error');
+                    } else if (failedCount > 0) {
+                        // Частичный успех
+                        showAlert(`⚠️ Загружено ${successCount} из ${totalCount} товаров. ${failedCount} товаров не удалось загрузить.`, 'warning');
+                    } else {
+                        // Полный успех
+                        showAlert(`✅ Успешно загружено ${successCount} товаров!`, 'success');
+                    }
+                    
+                    // Показываем детали результатов
+                    if (data.results) {
+                        const failedProducts = data.results.filter(r => !r.result?.success);
+                        if (failedProducts.length > 0) {
+                            console.error('❌ Failed products:', failedProducts);
+                            let details = 'Ошибки:\n';
+                            failedProducts.forEach((p, idx) => {
+                                const error = p.result?.error || p.result?.body?.error || 'Unknown error';
+                                details += `${idx + 1}. ${p.offer_id}: ${error}\n`;
+                            });
+                            console.error(details);
+                        }
+                    }
+                    
+                    // Очищаем формы только если все успешно
+                    if (failedCount === 0) {
+                        document.getElementById('productsFormsContainer').innerHTML = '';
+                        productForms = [];
+                        formCounter = 0;
+                        addProductForm();
+                        // Удаление медиа после загрузки
+                        if (mediaUrls.length > 0) {
+                            await deleteMedia(mediaUrls);
+                        }
                     }
                 } else {
-                    showAlert('❌ Ошибка: ' + (data.detail || 'Unknown error'), 'error');
+                    const errorMsg = data.detail || data.message || data.error || 'Unknown error';
+                    console.error('❌ Error response:', errorMsg);
+                    showAlert('❌ Ошибка: ' + errorMsg, 'error');
                 }
             } catch (e) {
+                console.error('❌ Exception:', e);
                 showAlert('❌ Ошибка: ' + e.message, 'error');
+            } finally {
+                // Восстанавливаем кнопку
+                if (!submitButton) {
+                    submitButton = event?.target || document.getElementById('submitAllBtn') || document.querySelector('button.btn-primary');
+                }
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = '🚀 Загрузить все';
+                }
             }
         }
 
@@ -815,8 +2439,98 @@
             }
         }
 
+        // === СТАТИСТИКА ===
+        async function loadStatistics() {
+            const dashboard = document.getElementById('statisticsDashboard');
+            if (!dashboard) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/products/history`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load statistics');
+                
+                const data = await response.json();
+                const history = data.history || [];
+                
+                // Подсчитываем статистику
+                const stats = {
+                    total: history.length,
+                    byMarketplace: { ozon: 0, wildberries: 0 },
+                    byStatus: { success: 0, updated: 0, failed: 0, pending: 0, update_failed: 0 },
+                    today: 0,
+                    thisWeek: 0,
+                    thisMonth: 0
+                };
+                
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                
+                history.forEach(item => {
+                    if (item.marketplace === 'ozon') stats.byMarketplace.ozon++;
+                    if (item.marketplace === 'wildberries') stats.byMarketplace.wildberries++;
+                    
+                    const status = item.status || 'pending';
+                    if (stats.byStatus[status] !== undefined) stats.byStatus[status]++;
+                    
+                    const itemDate = new Date(item.created_at);
+                    if (itemDate >= today) stats.today++;
+                    if (itemDate >= weekAgo) stats.thisWeek++;
+                    if (itemDate >= monthAgo) stats.thisMonth++;
+                });
+                
+                dashboard.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.total}</div>
+                            <div style="opacity: 0.9;">Всего товаров</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.byMarketplace.ozon}</div>
+                            <div style="opacity: 0.9;">🔵 Ozon</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.byMarketplace.wildberries}</div>
+                            <div style="opacity: 0.9;">🔴 Wildberries</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.byStatus.success}</div>
+                            <div style="opacity: 0.9;">✅ Успешно</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.byStatus.failed + stats.byStatus.update_failed}</div>
+                            <div style="opacity: 0.9;">❌ Ошибки</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.today}</div>
+                            <div style="opacity: 0.9;">Сегодня</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.thisWeek}</div>
+                            <div style="opacity: 0.9;">За неделю</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; padding: 1.5rem; border-radius: 12px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${stats.thisMonth}</div>
+                            <div style="opacity: 0.9;">За месяц</div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                const dashboard = document.getElementById('statisticsDashboard');
+                if (dashboard) {
+                    dashboard.innerHTML = `<div class="alert alert-error">Ошибка загрузки статистики: ${e.message}</div>`;
+                }
+            }
+        }
+        
         // === PRODUCTS TAB ===
         async function loadProducts() {
+            await loadStatistics(); // Загружаем статистику при загрузке товаров
             const container = document.getElementById('productsList');
             container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Загрузка товаров...</p></div>';
             try {
@@ -1130,8 +2844,6 @@
                 });
                 if (response.ok) {
                     showAlert('✅ Ozon ключи сохранены', 'success');
-                    document.getElementById('ozonClientId').value = '';
-                    document.getElementById('ozonApiKey').value = '';
                     loadCategories();
                 } else {
                     showAlert('❌ Ошибка при сохранении', 'error');
@@ -1158,7 +2870,6 @@
                 });
                 if (response.ok) {
                     showAlert('✅ WB ключ сохранен', 'success');
-                    document.getElementById('wbApiKey').value = '';
                     loadCategories();
                 } else {
                     showAlert('❌ Ошибка при сохранении', 'error');
@@ -1168,6 +2879,375 @@
             }
         }
 
+        // === ЭКСПОРТ/ИМПОРТ CSV ===
+        function exportProductsToCSV() {
+            if (productForms.length === 0) {
+                showAlert('⚠️ Нет товаров для экспорта', 'error');
+                return;
+            }
+            
+            const products = [];
+            productForms.forEach(form => {
+                const offerIdEl = document.querySelector(`.offer-id[data-form-id="${form.id}"]`);
+                const nameEl = document.querySelector(`.product-name[data-form-id="${form.id}"]`);
+                const priceEl = document.querySelector(`.price[data-form-id="${form.id}"]`);
+                const stockEl = document.querySelector(`.stock[data-form-id="${form.id}"]`);
+                const brandEl = document.querySelector(`.brand[data-form-id="${form.id}"]`);
+                const descEl = document.querySelector(`.description[data-form-id="${form.id}"]`);
+                const barcodeEl = document.querySelector(`.barcode[data-form-id="${form.id}"]`);
+                
+                const images = Array.from(document.querySelectorAll(`#image-links-${form.id} .media-item[data-url]`))
+                    .map(el => el.dataset.url).join(';');
+                const videos = Array.from(document.querySelectorAll(`#video-links-${form.id} .media-item[data-url]`))
+                    .map(el => el.dataset.url).join(';');
+                
+                products.push({
+                    offer_id: offerIdEl?.value || '',
+                    name: nameEl?.value || '',
+                    price: priceEl?.value || '0',
+                    stock: stockEl?.value || '0',
+                    brand: brandEl?.value || '',
+                    description: (descEl?.value || '').replace(/\n/g, ' '),
+                    barcode: barcodeEl?.value || '',
+                    marketplace: currentMarketplace,
+                    category: form.category ? (currentMarketplace === 'ozon' ? (form.category.description_category_id || form.category.category_id || '') : (form.category.parentID || form.category.id || '')) : '',
+                    images: images,
+                    videos: videos
+                });
+            });
+            
+            // Создаем CSV с правильным экранированием
+            const headers = ['offer_id', 'name', 'price', 'stock', 'brand', 'description', 'barcode', 'marketplace', 'category', 'images', 'videos'];
+            
+            // Функция для правильного экранирования CSV значений
+            const escapeCSVValue = (value) => {
+                if (value === null || value === undefined) return '';
+                const str = String(value);
+                // Если значение содержит запятую, кавычку, перенос строки или пробелы в начале/конце - оборачиваем в кавычки
+                if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r') || str.trim() !== str) {
+                    // Экранируем кавычки (удваиваем их)
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+            
+            const csvRows = [headers.map(escapeCSVValue).join(',')];
+            
+            products.forEach(product => {
+                const row = headers.map(header => {
+                    const value = product[header] || '';
+                    return escapeCSVValue(value);
+                });
+                csvRows.push(row.join(','));
+            });
+            
+            const csvContent = csvRows.join('\r\n'); // Используем \r\n для лучшей совместимости с Excel
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM для правильной кодировки в Excel
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `products_${currentMarketplace}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            showAlert('✅ Товары экспортированы в CSV', 'success');
+        }
+        
+        async function importProductsFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const text = e.target.result;
+                    // Нормализуем переносы строк (обрабатываем \r\n, \n, \r)
+                    const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                    const lines = normalizedText.split('\n').filter(line => line.trim() || line.includes(','));
+                    
+                    if (lines.length < 2) {
+                        showAlert('⚠️ CSV файл пуст или содержит только заголовки', 'error');
+                        return;
+                    }
+                    
+                    // Функция для правильного парсинга CSV строки
+                    const parseCSVLine = (line) => {
+                        const values = [];
+                        let currentValue = '';
+                        let inQuotes = false;
+                        
+                        for (let j = 0; j < line.length; j++) {
+                            const char = line[j];
+                            
+                            if (char === '"') {
+                                if (inQuotes && line[j + 1] === '"') {
+                                    // Удвоенная кавычка внутри кавычек - это экранированная кавычка
+                                    currentValue += '"';
+                                    j++; // Пропускаем следующую кавычку
+                                } else {
+                                    // Начало или конец значения в кавычках
+                                    inQuotes = !inQuotes;
+                                }
+                            } else if (char === ',' && !inQuotes) {
+                                // Запятая вне кавычек - разделитель значений
+                                values.push(currentValue.trim());
+                                currentValue = '';
+                            } else {
+                                // Обычный символ
+                                currentValue += char;
+                            }
+                        }
+                        // Добавляем последнее значение
+                        values.push(currentValue.trim());
+                        
+                        return values;
+                    };
+                    
+                    // Парсим заголовки
+                    const headerLine = parseCSVLine(lines[0]);
+                    const headers = headerLine.map(h => h.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+                    
+                    console.log('[Import] CSV Headers:', headers);
+                    
+                    const products = [];
+                    
+                    // Парсим данные
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue; // Пропускаем пустые строки
+                        
+                        const values = parseCSVLine(lines[i]);
+                        
+                        // Убираем кавычки из значений и обрабатываем экранированные кавычки
+                        const cleanValues = values.map(v => {
+                            let cleaned = v.trim();
+                            // Если значение обернуто в кавычки, убираем их
+                            if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+                                cleaned = cleaned.slice(1, -1);
+                            }
+                            // Заменяем удвоенные кавычки на одинарные
+                            cleaned = cleaned.replace(/""/g, '"');
+                            return cleaned;
+                        });
+                        
+                        if (cleanValues.length >= headers.length) {
+                            const product = {};
+                            headers.forEach((header, idx) => {
+                                product[header] = cleanValues[idx] || '';
+                            });
+                            
+                            // Добавляем товар, если есть хотя бы какие-то данные
+                            const hasData = product.offer_id || product.name || product.price || product.stock || product.brand || product.description;
+                            if (hasData) {
+                                products.push(product);
+                                console.log(`[Import] Added product ${products.length} to import list:`, product);
+                            } else {
+                                console.warn('Пропущена пустая строка:', product);
+                            }
+                        } else {
+                            console.warn(`Строка ${i + 1} имеет ${cleanValues.length} значений, ожидается ${headers.length}:`, cleanValues);
+                        }
+                    }
+                    
+                    if (products.length === 0) {
+                        showAlert('⚠️ Не найдено товаров для импорта', 'error');
+                        return;
+                    }
+                    
+                    // НЕ очищаем существующие формы, а добавляем новые товары к существующим
+                    // Создаем формы для каждого товара последовательно
+                    const importProduct = async (product, index) => {
+                        return new Promise((resolve) => {
+                            // Создаем форму
+                            addProductForm();
+                            // Сохраняем formId сразу после создания (до того как formCounter увеличится)
+                            const currentFormId = formCounter - 1;
+                            
+                            console.log(`[Import] Creating form ${currentFormId} for product ${index + 1}: ${product.name || product.offer_id}`);
+                            
+                            // Ждем, пока форма появится в DOM
+                            const waitForForm = (attempts = 0) => {
+                                const form = document.getElementById(`form-${currentFormId}`);
+                                if (form) {
+                                    // Форма найдена, заполняем данные
+                                    setTimeout(() => {
+                                        const offerIdEl = document.querySelector(`.offer-id[data-form-id="${currentFormId}"]`);
+                                        const nameEl = document.querySelector(`.product-name[data-form-id="${currentFormId}"]`);
+                                        const priceEl = document.querySelector(`.price[data-form-id="${currentFormId}"]`);
+                                        const stockEl = document.querySelector(`.stock[data-form-id="${currentFormId}"]`);
+                                        const brandEl = document.querySelector(`.brand[data-form-id="${currentFormId}"]`);
+                                        const descEl = document.querySelector(`.description[data-form-id="${currentFormId}"]`);
+                                        const barcodeEl = document.querySelector(`.barcode[data-form-id="${currentFormId}"]`);
+                                        
+                                        console.log(`[Import] Filling form ${currentFormId} with product ${index + 1}:`, product);
+                                        
+                                        if (offerIdEl) offerIdEl.value = (product.offer_id || '').trim();
+                                        if (nameEl) nameEl.value = (product.name || '').trim();
+                                        if (priceEl) priceEl.value = (product.price || '0').trim();
+                                        if (stockEl) stockEl.value = (product.stock || '0').trim();
+                                        if (brandEl) brandEl.value = (product.brand || '').trim();
+                                        if (descEl) descEl.value = (product.description || '').trim();
+                                        if (barcodeEl) barcodeEl.value = (product.barcode || '').trim();
+                                        
+                                        console.log(`[Import] Form ${currentFormId} fields filled:`, {
+                                            offer_id: offerIdEl?.value,
+                                            name: nameEl?.value,
+                                            price: priceEl?.value,
+                                            stock: stockEl?.value
+                                        });
+                                        
+                                        // Устанавливаем маркетплейс (только для первого товара, если отличается)
+                                        if (index === 0 && product.marketplace && product.marketplace !== currentMarketplace) {
+                                            setMarketplace(product.marketplace);
+                                        }
+                                        
+                                        // Загружаем изображения, если они есть
+                                        if (product.images) {
+                                            const imageUrls = product.images.split(';').filter(url => url.trim());
+                                            if (imageUrls.length > 0) {
+                                                const imageLinksContainer = document.querySelector(`#image-links-${currentFormId}`);
+                                                if (imageLinksContainer) {
+                                                    imageUrls.forEach(url => {
+                                                        if (url.trim()) {
+                                                            const imgDiv = document.createElement('div');
+                                                            imgDiv.className = 'media-item';
+                                                            imgDiv.setAttribute('data-url', url.trim());
+                                                            imgDiv.innerHTML = `
+                                                                <img src="${url.trim()}" alt="Image" onclick="openMediaModal('${url.trim()}')" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;">
+                                                                <button type="button" onclick="removeMedia('${url.trim()}', ${currentFormId}, 'image')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
+                                                            `;
+                                                            imageLinksContainer.appendChild(imgDiv);
+                                                        }
+                                                    });
+                                                    if (!localImagePaths[currentFormId]) localImagePaths[currentFormId] = [];
+                                                    localImagePaths[currentFormId].push(...imageUrls.map(url => url.trim()));
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Загружаем видео, если они есть
+                                        if (product.videos) {
+                                            const videoUrls = product.videos.split(';').filter(url => url.trim());
+                                            if (videoUrls.length > 0) {
+                                                const videoLinksContainer = document.querySelector(`#video-links-${currentFormId}`);
+                                                if (videoLinksContainer) {
+                                                    videoUrls.forEach(url => {
+                                                        if (url.trim()) {
+                                                            const videoDiv = document.createElement('div');
+                                                            videoDiv.className = 'media-item';
+                                                            videoDiv.setAttribute('data-url', url.trim());
+                                                            videoDiv.innerHTML = `
+                                                                <video src="${url.trim()}" controls style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="openMediaModal('${url.trim()}')"></video>
+                                                                <button type="button" onclick="removeMedia('${url.trim()}', ${currentFormId}, 'video')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
+                                                            `;
+                                                            videoLinksContainer.appendChild(videoDiv);
+                                                        }
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        
+                                        console.log(`[Import] Form ${currentFormId} filled successfully`);
+                                        resolve();
+                                    }, 500);
+                                } else if (attempts < 20) {
+                                    // Форма еще не появилась, ждем еще
+                                    setTimeout(() => waitForForm(attempts + 1), 100);
+                                } else {
+                                    console.error(`[Import] Form ${currentFormId} not found after 20 attempts`);
+                                    resolve();
+                                }
+                            };
+                            
+                            waitForForm();
+                        });
+                    };
+                    
+                    console.log(`[Import] Found ${products.length} products to import:`, products);
+                    
+                    // Импортируем товары последовательно
+                    (async () => {
+                        for (let i = 0; i < products.length; i++) {
+                            console.log(`[Import] Starting import of product ${i + 1}/${products.length}:`, products[i]);
+                            await importProduct(products[i], i);
+                            // Небольшая задержка между товарами
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                        }
+                        console.log(`[Import] All ${products.length} products imported successfully`);
+                        showAlert(`✅ Импортировано ${products.length} товаров`, 'success');
+                    })();
+                    
+                    // Показываем сообщение после создания всех форм
+                    setTimeout(() => {
+                        showAlert(`✅ Импортировано ${products.length} товаров`, 'success');
+                    }, products.length * 200 + 500);
+                    
+                    event.target.value = ''; // Сбрасываем input
+                } catch (error) {
+                    console.error('Ошибка импорта:', error);
+                    showAlert('❌ Ошибка импорта: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // === ВАЛИДАЦИЯ ИЗОБРАЖЕНИЙ ===
+        function validateImage(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const errors = [];
+            
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`Формат ${file.type} не поддерживается. Используйте JPEG, PNG или WebP.`);
+            }
+            
+            if (file.size > maxSize) {
+                errors.push(`Размер файла ${(file.size / 1024 / 1024).toFixed(2)}MB превышает максимум 10MB.`);
+            }
+            
+            return errors;
+        }
+        
+        // Обновляем handleImageSelect для валидации
+        const originalHandleImageSelect = window.handleImageSelect;
+        window.handleImageSelect = async function(event, formId) {
+            const files = Array.from(event.target.files);
+            const errors = [];
+            const validFiles = [];
+            
+            // Валидация каждого файла
+            files.forEach((file, index) => {
+                const fileErrors = validateImage(file);
+                if (fileErrors.length > 0) {
+                    errors.push(`Файл ${file.name}: ${fileErrors.join(' ')}`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+            
+            // Проверка количества
+            const existingImages = document.querySelectorAll(`#image-links-${formId} .media-item`).length;
+            const maxImages = 10;
+            if (existingImages + validFiles.length > maxImages) {
+                errors.push(`Максимум ${maxImages} изображений. Уже загружено: ${existingImages}, пытаетесь добавить: ${validFiles.length}`);
+                validFiles.splice(maxImages - existingImages);
+            }
+            
+            if (errors.length > 0) {
+                showAlert('⚠️ Ошибки валидации:\n' + errors.join('\n'), 'error');
+            }
+            
+            if (validFiles.length > 0) {
+                // Создаем новый event с только валидными файлами
+                const dataTransfer = new DataTransfer();
+                validFiles.forEach(file => dataTransfer.items.add(file));
+                event.target.files = dataTransfer.files;
+                
+                // Вызываем оригинальную функцию
+                if (originalHandleImageSelect) {
+                    await originalHandleImageSelect(event, formId);
+                }
+            } else {
+                event.target.value = ''; // Очищаем input если нет валидных файлов
+            }
+        };
+        
         function logout() {
             localStorage.removeItem('access_token');
             window.location.href = '/index.html';
