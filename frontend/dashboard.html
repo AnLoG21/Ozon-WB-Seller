@@ -100,6 +100,44 @@
         body.dark-theme .loading {
             color: #999999;
         }
+        body.dark-theme #userInfo,
+        body.dark-theme #2faStatus {
+            background: #2d2d2d !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme #userInfoContent,
+        body.dark-theme #2faStatusContent {
+            color: #ffffff !important;
+        }
+        body.dark-theme #userInfoContent div,
+        body.dark-theme #2faStatusContent div {
+            color: #ffffff !important;
+        }
+        body.dark-theme #userInfoContent strong,
+        body.dark-theme #2faStatusContent strong {
+            color: #cccccc;
+        }
+        body.dark-theme #userInfoContent a,
+        body.dark-theme #2faStatusContent a {
+            color: #7c8ef5 !important;
+        }
+        body.dark-theme [style*="background: #f5f5f5"] {
+            background: #2d2d2d !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme .profile-tab-btn {
+            color: #cccccc;
+        }
+        body.dark-theme .profile-tab-btn.active {
+            color: #7c8ef5;
+            border-bottom-color: #7c8ef5;
+        }
+        body.dark-theme [style*="border-bottom: 2px solid #e0e0e0"] {
+            border-bottom-color: #404040 !important;
+        }
+        body.dark-theme .form-label {
+            color: #cccccc;
+        }
         
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .navbar h1 { font-size: 1.5rem; }
@@ -113,6 +151,11 @@
         .user-menu-item:first-child { border-top-left-radius: 8px; border-top-right-radius: 8px; }
         .user-menu-item:last-child { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; border-top: 1px solid #e0e0e0; color: #e74c3c; }
         .user-menu-divider { height: 1px; background: #e0e0e0; margin: 0.25rem 0; }
+        .profile-tab-btn { padding: 0.5rem 1rem; border: none; background: none; cursor: pointer; font-size: 0.95rem; border-bottom: 2px solid transparent; transition: all 0.3s; color: #666; }
+        .profile-tab-btn:hover { color: #667eea; }
+        .profile-tab-btn.active { color: #667eea; border-bottom-color: #667eea; font-weight: 600; }
+        .profile-tab-content { display: none; }
+        .profile-tab-content.active { display: block; }
         .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #ddd; overflow-x: auto; }
         .tab-button { padding: 0.75rem 1.5rem; border: none; background: none; cursor: pointer; font-size: 1rem; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; color: #333; }
@@ -225,6 +268,10 @@
         <div class="tabs">
             <button class="tab-button active" onclick="switchTab('create')">➕ Создать товар</button>
             <button class="tab-button" onclick="switchTab('products')">📦 Товары</button>
+            <button class="tab-button" onclick="switchTab('manage')">⚙️ Управление</button>
+            <button class="tab-button" onclick="switchTab('orders')">📋 Заказы</button>
+            <button class="tab-button" onclick="switchTab('analytics')">📊 Аналитика</button>
+            <button class="tab-button" onclick="switchTab('reviews')">💬 Отзывы</button>
         </div>
 
         <!-- TAB: Создать товар -->
@@ -282,6 +329,474 @@
             </div>
         </div>
 
+        <!-- TAB: Управление товарами -->
+        <div id="manage" class="tab-content">
+            <div class="card">
+                <h2>⚙️ Управление товарами на маркетплейсах</h2>
+                
+                <!-- Выбор маркетплейса -->
+                <div class="marketplace-selector" style="margin-bottom: 2rem;">
+                    <button class="marketplace-btn active" onclick="setManageMarketplace('ozon')" id="manageOzonBtn">🔵 Ozon</button>
+                    <button class="marketplace-btn" onclick="setManageMarketplace('wildberries')" id="manageWbBtn">🔴 Wildberries</button>
+                </div>
+
+                <!-- Ozon управление -->
+                <div id="ozonManage" class="manage-section">
+                    <h3>🔵 Управление товарами Ozon</h3>
+                    
+                    <!-- Получение списка товаров -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📋 Список товаров</h4>
+                        <div class="form-group">
+                            <label class="form-label">Артикул товара (необязательно, для поиска конкретного товара)</label>
+                            <input type="text" id="ozonListOfferId" class="form-input" placeholder="Введите артикул товара">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadOzonProducts()">📋 Загрузить список товаров</button>
+                        <div id="ozonProductsList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Информация о товаре -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>ℹ️ Информация о товаре</h4>
+                        <div class="form-group">
+                            <label class="form-label">Артикул товара или номер товара</label>
+                            <input type="text" id="ozonProductInfoId" class="form-input" placeholder="Введите артикул или номер товара">
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">Можно указать артикул (например: SKU001) или внутренний номер товара</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="getOzonProductInfo()">ℹ️ Получить информацию</button>
+                        <div id="ozonProductInfo" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Удаление товара -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>🗑️ Удаление товара</h4>
+                        <div class="form-group">
+                            <label class="form-label">Артикул товара (через запятую для нескольких товаров)</label>
+                            <input type="text" id="ozonDeleteIds" class="form-input" placeholder="Введите артикул товара, например: SKU001, SKU002">
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">Можно указать несколько артикулов через запятую</small>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteOzonProduct()">🗑️ Удалить товар</button>
+                        <div id="ozonDeleteResult" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Обновление цен -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💰 Обновление цен</h4>
+                        <div class="form-group">
+                            <label class="form-label">Данные для обновления цен (JSON формат)</label>
+                            <textarea id="ozonPricesJson" class="form-textarea" rows="5" placeholder='[{"артикул": "SKU001", "цена": 5000, "старая_цена": 6000}]'></textarea>
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">
+                                <strong>Формат:</strong> [{"артикул": "SKU001", "цена": 5000, "старая_цена": 6000}]<br>
+                                <strong>Важно:</strong> Цены указываются в рублях (например: 5000 = 5000 рублей)
+                            </small>
+                        </div>
+                        <button class="btn btn-primary" onclick="updateOzonPrices()">💰 Обновить цены</button>
+                        <div id="ozonPricesResult" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Обновление остатков -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📦 Обновление остатков</h4>
+                        <div class="form-group">
+                            <label class="form-label">Данные для обновления остатков (JSON формат)</label>
+                            <textarea id="ozonStocksJson" class="form-textarea" rows="5" placeholder='[{"артикул": "SKU001", "остаток": 100}]'></textarea>
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">
+                                <strong>Формат:</strong> [{"артикул": "SKU001", "остаток": 100}]
+                            </small>
+                        </div>
+                        <button class="btn btn-primary" onclick="updateOzonStocks()">📦 Обновить остатки</button>
+                        <div id="ozonStocksResult" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Wildberries управление -->
+                <div id="wbManage" class="manage-section" style="display: none;">
+                    <h3>🔴 Управление товарами Wildberries</h3>
+                    
+                    <!-- Получение списка карточек -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📋 Список товаров</h4>
+                        <div class="form-group">
+                            <label class="form-label">Количество товаров для загрузки</label>
+                            <input type="number" id="wbListLimit" class="form-input" value="100" min="1" max="100">
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">Максимум 100 товаров за раз</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadWbProducts()">📋 Загрузить список товаров</button>
+                        <div id="wbProductsList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Информация о карточке -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>ℹ️ Информация о товаре</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер товара или артикул поставщика</label>
+                            <input type="text" id="wbProductInfoId" class="form-input" placeholder="Введите номер товара или артикул">
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">Можно указать номер товара (например: 12345678) или артикул поставщика</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="getWbProductInfo()">ℹ️ Получить информацию</button>
+                        <div id="wbProductInfo" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Удаление карточки -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>🗑️ Удаление товара</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер товара</label>
+                            <input type="number" id="wbDeleteNmId" class="form-input" placeholder="Введите номер товара">
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">Введите числовой номер товара для удаления</small>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteWbProduct()">🗑️ Удалить товар</button>
+                        <div id="wbDeleteResult" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Обновление цен -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💰 Обновление цен</h4>
+                        <div class="form-group">
+                            <label class="form-label">Данные для обновления цен (JSON формат)</label>
+                            <textarea id="wbPricesJson" class="form-textarea" rows="5" placeholder='[{"номер_товара": 12345678, "цена": 5000}]'></textarea>
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">
+                                <strong>Формат:</strong> [{"номер_товара": 12345678, "цена": 5000}]<br>
+                                <strong>Важно:</strong> Цены указываются в рублях (например: 5000 = 5000 рублей)
+                            </small>
+                        </div>
+                        <button class="btn btn-primary" onclick="updateWbPrices()">💰 Обновить цены</button>
+                        <div id="wbPricesResult" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <!-- Обновление остатков -->
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📦 Обновление остатков</h4>
+                        <div class="form-group">
+                            <label class="form-label">Данные для обновления остатков (JSON формат)</label>
+                            <textarea id="wbStocksJson" class="form-textarea" rows="5" placeholder='[{"склад": 123, "товары": [{"артикул": "SKU001", "количество": 100}]}]'></textarea>
+                            <small style="color: #666; display: block; margin-top: 0.5rem;">
+                                <strong>Формат:</strong> [{"склад": 123, "товары": [{"артикул": "SKU001", "количество": 100}]}]
+                            </small>
+                        </div>
+                        <button class="btn btn-primary" onclick="updateWbStocks()">📦 Обновить остатки</button>
+                        <div id="wbStocksResult" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Заказы -->
+        <div id="orders" class="tab-content">
+            <div class="card">
+                <h2>📋 Управление заказами</h2>
+                
+                <div class="marketplace-selector" style="margin-bottom: 2rem;">
+                    <button class="marketplace-btn active" onclick="setOrdersMarketplace('ozon')" id="ordersOzonBtn">🔵 Ozon</button>
+                    <button class="marketplace-btn" onclick="setOrdersMarketplace('wildberries')" id="ordersWbBtn">🔴 Wildberries</button>
+                </div>
+
+                <!-- Ozon заказы -->
+                <div id="ozonOrders" class="orders-section">
+                    <h3>🔵 Заказы Ozon</h3>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📋 Список заказов</h4>
+                        <div class="form-group">
+                            <label class="form-label">Лимит</label>
+                            <input type="number" id="ozonOrdersLimit" class="form-input" value="100" min="1" max="1000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Смещение</label>
+                            <input type="number" id="ozonOrdersOffset" class="form-input" value="0" min="0">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadOzonOrders()">📋 Загрузить заказы</button>
+                        <div id="ozonOrdersList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>ℹ️ Информация о заказе</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер отправления</label>
+                            <input type="text" id="ozonOrderNumber" class="form-input" placeholder="Введите номер отправления">
+                        </div>
+                        <button class="btn btn-primary" onclick="getOzonOrderInfo()">ℹ️ Получить информацию</button>
+                        <div id="ozonOrderInfo" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>❌ Отмена заказа</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер отправления</label>
+                            <input type="text" id="ozonCancelOrderNumber" class="form-input" placeholder="Введите номер отправления">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ID причины отмены</label>
+                            <input type="number" id="ozonCancelReasonId" class="form-input" placeholder="Введите ID причины отмены">
+                        </div>
+                        <button class="btn btn-danger" onclick="cancelOzonOrder()">❌ Отменить заказ</button>
+                        <div id="ozonCancelResult" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Wildberries заказы -->
+                <div id="wbOrders" class="orders-section" style="display: none;">
+                    <h3>🔴 Заказы Wildberries</h3>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📋 Список заказов</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD)</label>
+                            <input type="date" id="wbOrdersDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Дата до (YYYY-MM-DD)</label>
+                            <input type="date" id="wbOrdersDateTo" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Количество</label>
+                            <input type="number" id="wbOrdersTake" class="form-input" value="100" min="1" max="1000">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadWbOrders()">📋 Загрузить заказы</button>
+                        <div id="wbOrdersList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>ℹ️ Информация о заказе</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер заказа</label>
+                            <input type="number" id="wbOrderId" class="form-input" placeholder="Введите номер заказа">
+                        </div>
+                        <button class="btn btn-primary" onclick="getWbOrderInfo()">ℹ️ Получить информацию</button>
+                        <div id="wbOrderInfo" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>✅ Подтверждение заказа</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер заказа</label>
+                            <input type="number" id="wbConfirmOrderId" class="form-input" placeholder="Введите номер заказа">
+                        </div>
+                        <button class="btn btn-primary" onclick="confirmWbOrder()">✅ Подтвердить заказ</button>
+                        <div id="wbConfirmResult" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>❌ Отмена заказа</h4>
+                        <div class="form-group">
+                            <label class="form-label">Номер заказа</label>
+                            <input type="number" id="wbCancelOrderId" class="form-input" placeholder="Введите номер заказа">
+                        </div>
+                        <button class="btn btn-danger" onclick="cancelWbOrder()">❌ Отменить заказ</button>
+                        <div id="wbCancelResult" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Аналитика -->
+        <div id="analytics" class="tab-content">
+            <div class="card">
+                <h2>📊 Аналитика и отчеты</h2>
+                
+                <div class="marketplace-selector" style="margin-bottom: 2rem;">
+                    <button class="marketplace-btn active" onclick="setAnalyticsMarketplace('ozon')" id="analyticsOzonBtn">🔵 Ozon</button>
+                    <button class="marketplace-btn" onclick="setAnalyticsMarketplace('wildberries')" id="analyticsWbBtn">🔴 Wildberries</button>
+                </div>
+
+                <!-- Ozon аналитика -->
+                <div id="ozonAnalytics" class="analytics-section">
+                    <h3>🔵 Аналитика Ozon</h3>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💰 Отчет по продажам</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD)</label>
+                            <input type="date" id="ozonSalesDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Дата до (YYYY-MM-DD)</label>
+                            <input type="date" id="ozonSalesDateTo" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" onclick="getOzonSalesReport()">📊 Получить отчет</button>
+                        <div id="ozonSalesReport" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📦 Отчет по остаткам</h4>
+                        <button class="btn btn-primary" onclick="getOzonStocksReport()">📊 Получить отчет</button>
+                        <div id="ozonStocksReport" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💳 Финансовый отчет</h4>
+                        <div class="form-group">
+                            <label class="form-label">Страница</label>
+                            <input type="number" id="ozonFinancePage" class="form-input" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Размер страницы</label>
+                            <input type="number" id="ozonFinancePageSize" class="form-input" value="100" min="1" max="1000">
+                        </div>
+                        <button class="btn btn-primary" onclick="getOzonFinanceReport()">📊 Получить отчет</button>
+                        <div id="ozonFinanceReport" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Wildberries аналитика -->
+                <div id="wbAnalytics" class="analytics-section" style="display: none;">
+                    <h3>🔴 Аналитика Wildberries</h3>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💰 Отчет по продажам</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD)</label>
+                            <input type="date" id="wbSalesDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Дата до (YYYY-MM-DD)</label>
+                            <input type="date" id="wbSalesDateTo" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" onclick="getWbSalesReport()">📊 Получить отчет</button>
+                        <div id="wbSalesReport" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📦 Отчет по остаткам</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD, необязательно)</label>
+                            <input type="date" id="wbStocksDateFrom" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" onclick="getWbStocksReport()">📊 Получить отчет</button>
+                        <div id="wbStocksReport" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💳 Финансовый отчет</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD)</label>
+                            <input type="date" id="wbPaymentsDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Дата до (YYYY-MM-DD)</label>
+                            <input type="date" id="wbPaymentsDateTo" class="form-input">
+                        </div>
+                        <button class="btn btn-primary" onclick="getWbPaymentsReport()">📊 Получить отчет</button>
+                        <div id="wbPaymentsReport" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Отзывы -->
+        <div id="reviews" class="tab-content">
+            <div class="card">
+                <h2>💬 Отзывы и вопросы</h2>
+                
+                <div class="marketplace-selector" style="margin-bottom: 2rem;">
+                    <button class="marketplace-btn active" onclick="setReviewsMarketplace('ozon')" id="reviewsOzonBtn">🔵 Ozon</button>
+                    <button class="marketplace-btn" onclick="setReviewsMarketplace('wildberries')" id="reviewsWbBtn">🔴 Wildberries</button>
+                </div>
+
+                <!-- Ozon отзывы -->
+                <div id="ozonReviews" class="reviews-section">
+                    <h3>🔵 Отзывы Ozon</h3>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>📋 Список отзывов</h4>
+                        <div class="form-group">
+                            <label class="form-label">Страница</label>
+                            <input type="number" id="ozonReviewsPage" class="form-input" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Размер страницы</label>
+                            <input type="number" id="ozonReviewsPageSize" class="form-input" value="10" min="1" max="100">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadOzonReviews()">📋 Загрузить отзывы</button>
+                        <div id="ozonReviewsList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💬 Ответ на отзыв</h4>
+                        <div class="form-group">
+                            <label class="form-label">ID отзыва</label>
+                            <input type="number" id="ozonReviewId" class="form-input" placeholder="Введите ID отзыва">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Текст ответа</label>
+                            <textarea id="ozonReviewAnswer" class="form-textarea" rows="3" placeholder="Введите текст ответа"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="answerOzonReview()">💬 Ответить</button>
+                        <div id="ozonReviewAnswerResult" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Wildberries отзывы и вопросы -->
+                <div id="wbReviews" class="reviews-section" style="display: none;">
+                    <h3>🔴 Отзывы и вопросы Wildberries</h3>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>❓ Список вопросов</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD, необязательно)</label>
+                            <input type="date" id="wbQuestionsDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Дата до (YYYY-MM-DD, необязательно)</label>
+                            <input type="date" id="wbQuestionsDateTo" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Количество</label>
+                            <input type="number" id="wbQuestionsTake" class="form-input" value="100" min="1" max="1000">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadWbQuestions()">📋 Загрузить вопросы</button>
+                        <div id="wbQuestionsList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💬 Ответ на вопрос</h4>
+                        <div class="form-group">
+                            <label class="form-label">ID вопроса</label>
+                            <input type="number" id="wbQuestionId" class="form-input" placeholder="Введите ID вопроса">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Текст ответа</label>
+                            <textarea id="wbQuestionAnswer" class="form-textarea" rows="3" placeholder="Введите текст ответа"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="answerWbQuestion()">💬 Ответить</button>
+                        <div id="wbQuestionAnswerResult" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>⭐ Список отзывов</h4>
+                        <div class="form-group">
+                            <label class="form-label">Дата от (YYYY-MM-DD, необязательно)</label>
+                            <input type="date" id="wbFeedbacksDateFrom" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Дата до (YYYY-MM-DD, необязательно)</label>
+                            <input type="date" id="wbFeedbacksDateTo" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Количество</label>
+                            <input type="number" id="wbFeedbacksTake" class="form-input" value="100" min="1" max="1000">
+                        </div>
+                        <button class="btn btn-primary" onclick="loadWbFeedbacks()">📋 Загрузить отзывы</button>
+                        <div id="wbFeedbacksList" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                        <h4>💬 Ответ на отзыв</h4>
+                        <div class="form-group">
+                            <label class="form-label">ID отзыва</label>
+                            <input type="number" id="wbFeedbackId" class="form-input" placeholder="Введите ID отзыва">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Текст ответа</label>
+                            <textarea id="wbFeedbackAnswer" class="form-textarea" rows="3" placeholder="Введите текст ответа"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="answerWbFeedback()">💬 Ответить</button>
+                        <div id="wbFeedbackAnswerResult" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Модальные окна -->
@@ -316,29 +831,144 @@
 
     <!-- Модальное окно профиля -->
     <div id="profileModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
             <span class="modal-close" onclick="closeProfileModal()">&times;</span>
-            <h2>👤 Профиль и API Ключи</h2>
-            <div style="margin-bottom: 2rem;">
-                <h4>🔵 Ozon API Ключи</h4>
-                <div class="form-group">
-                    <label class="form-label">Client ID</label>
-                    <input type="text" id="ozonClientId" class="form-input" placeholder="Введи Ozon Client ID">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">API Key</label>
-                    <input type="password" id="ozonApiKey" class="form-input" placeholder="Введи Ozon API Key">
-                </div>
-                <button class="btn btn-primary" onclick="saveOzonKeys()">💾 Сохранить Ozon ключи</button>
+            <h2>👤 Профиль</h2>
+            
+            <!-- Информация о пользователе -->
+            <div id="userInfo" style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                <div id="userInfoContent">Загрузка...</div>
             </div>
-            <hr>
-            <div style="margin-top: 2rem;">
-                <h4>🔴 Wildberries API Ключ</h4>
-                <div class="form-group">
-                    <label class="form-label">API Key</label>
-                    <input type="password" id="wbApiKey" class="form-input" placeholder="Введи Wildberries API Key">
+
+            <!-- Вкладки профиля -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e0e0e0;">
+                <button class="profile-tab-btn active" onclick="switchProfileTab('api-keys')">🔑 API Ключи</button>
+                <button class="profile-tab-btn" onclick="switchProfileTab('security')">🔒 Безопасность</button>
+                <button class="profile-tab-btn" onclick="switchProfileTab('2fa')">🛡️ 2FA</button>
+            </div>
+
+            <!-- API Ключи -->
+            <div id="api-keys-tab" class="profile-tab-content active">
+                <div style="margin-bottom: 2rem;">
+                    <h4>🔵 Ozon API Ключи</h4>
+                    <div class="form-group">
+                        <label class="form-label">Client ID</label>
+                        <input type="text" id="ozonClientId" class="form-input" placeholder="Введи Ozon Client ID">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">API Key</label>
+                        <input type="password" id="ozonApiKey" class="form-input" placeholder="Введи Ozon API Key">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveOzonKeys()">💾 Сохранить Ozon ключи</button>
                 </div>
-                <button class="btn btn-primary" onclick="saveWbKeys()">💾 Сохранить WB ключ</button>
+                <hr>
+                <div style="margin-top: 2rem;">
+                    <h4>🔴 Wildberries API Ключ</h4>
+                    <div class="form-group">
+                        <label class="form-label">API Key</label>
+                        <input type="password" id="wbApiKey" class="form-input" placeholder="Введи Wildberries API Key">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveWbKeys()">💾 Сохранить WB ключ</button>
+                </div>
+            </div>
+
+            <!-- Безопасность -->
+            <div id="security-tab" class="profile-tab-content" style="display: none;">
+                <div style="margin-bottom: 2rem;">
+                    <h4>👤 Смена имени</h4>
+                    <div class="form-group">
+                        <label class="form-label">Новое имя</label>
+                        <input type="text" id="newUsername" class="form-input" placeholder="Введи новое имя (необязательно)">
+                        <small style="color: #666; font-size: 0.85rem;">Оставьте пустым, чтобы удалить имя</small>
+                    </div>
+                    <button class="btn btn-primary" onclick="changeUsername()">💾 Изменить имя</button>
+                    <div id="usernameChangeStatus" style="margin-top: 1rem;"></div>
+                </div>
+                <hr>
+                <div style="margin-top: 2rem; margin-bottom: 2rem;">
+                    <h4>🔑 Смена пароля</h4>
+                    <div class="form-group">
+                        <label class="form-label">Текущий пароль</label>
+                        <div style="position: relative;">
+                            <input type="password" id="currentPassword" class="form-input" placeholder="Введи текущий пароль" style="padding-right: 40px;">
+                            <button type="button" onclick="togglePassword('currentPassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Новый пароль</label>
+                        <div style="position: relative;">
+                            <input type="password" id="newPassword" class="form-input" placeholder="Минимум 8 символов, буквы, цифры, спецсимволы" style="padding-right: 40px;" oninput="checkPasswordStrength('newPassword', this.value)">
+                            <button type="button" onclick="togglePassword('newPassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
+                        </div>
+                        <div id="newPasswordStrength" style="margin-top: 0.5rem; font-size: 0.85rem;"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="changePassword()">💾 Изменить пароль</button>
+                </div>
+                <hr>
+                <div style="margin-top: 2rem;">
+                    <h4>📧 Смена email</h4>
+                    <div class="form-group">
+                        <label class="form-label">Новый email</label>
+                        <input type="email" id="newEmail" class="form-input" placeholder="Введи новый email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Пароль для подтверждения</label>
+                        <div style="position: relative;">
+                            <input type="password" id="emailChangePassword" class="form-input" placeholder="Введи пароль" style="padding-right: 40px;">
+                            <button type="button" onclick="togglePassword('emailChangePassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="requestEmailChange()">📧 Запросить смену email</button>
+                    <div id="emailChangeStatus" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- 2FA -->
+            <div id="2fa-tab" class="profile-tab-content" style="display: none;">
+                <div id="2faStatus" style="margin-bottom: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+                    <div id="2faStatusContent">Загрузка...</div>
+                </div>
+                <div id="2faSetup" style="display: none;">
+                    <h4>Настройка 2FA</h4>
+                    <div class="form-group">
+                        <label class="form-label">Пароль для подтверждения</label>
+                        <div style="position: relative;">
+                            <input type="password" id="2faSetupPassword" class="form-input" placeholder="Введи пароль" style="padding-right: 40px;">
+                            <button type="button" onclick="togglePassword('2faSetupPassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="setup2FA()">🔧 Настроить 2FA</button>
+                </div>
+                <div id="2faDisable" style="display: none;">
+                    <h4>Отключение 2FA</h4>
+                    <div class="form-group">
+                        <label class="form-label">Пароль для подтверждения</label>
+                        <div style="position: relative;">
+                            <input type="password" id="2faDisablePassword" class="form-input" placeholder="Введи пароль" style="padding-right: 40px;">
+                            <button type="button" onclick="togglePassword('2faDisablePassword', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.2rem;">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="disable2FA()" style="background: #e74c3c;">🚫 Отключить 2FA</button>
+                </div>
+                <div id="2faQR" style="display: none; text-align: center; margin: 2rem 0;">
+                    <div style="background: #e3f2fd; border: 1px solid #2196f3; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                        <p style="margin: 0; font-weight: bold; color: #1976d2;">📱 Для использования 2FA необходимо установить приложение-аутентификатор:</p>
+                        <ul style="text-align: left; margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                            <li><strong>Google Authenticator</strong> (iOS/Android)</li>
+                            <li><strong>Microsoft Authenticator</strong> (iOS/Android)</li>
+                            <li><strong>Authy</strong> (iOS/Android)</li>
+                        </ul>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9em; color: #666;">Установите одно из приложений, затем отсканируйте QR код ниже</p>
+                    </div>
+                    <p>Отсканируйте QR код в приложении-аутентификаторе:</p>
+                    <img id="2faQRCode" src="" alt="QR Code" style="max-width: 300px; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; background: white;">
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">Введите код для подтверждения</label>
+                        <input type="text" id="2faVerifyCode" class="form-input" placeholder="6-значный код" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5rem;">
+                    </div>
+                    <button class="btn btn-primary" onclick="verify2FASetup()">✅ Включить 2FA</button>
+                    <button class="btn btn-secondary" onclick="cancel2FASetup()">Отмена</button>
+                </div>
             </div>
         </div>
     </div>
@@ -478,12 +1108,89 @@
         const API_URL = window.location.origin + '/api';
         const MAX_FORMS = 100;
         let token = localStorage.getItem('access_token');
+        let refreshToken = localStorage.getItem('refresh_token');
         let currentMarketplace = 'ozon';
         let productForms = [];
         let formCounter = 0;
         let localImagePaths = {};
+        let isRefreshing = false;
 
         if (!token) window.location.href = '/index.html';
+
+        // Функция для автоматического обновления токена
+        async function refreshAccessToken() {
+            if (isRefreshing) {
+                // Ждем завершения текущего обновления
+                return new Promise((resolve) => {
+                    const checkInterval = setInterval(() => {
+                        if (!isRefreshing) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }
+
+            if (!refreshToken) {
+                // Нет refresh token, перенаправляем на вход
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/index.html';
+                return;
+            }
+
+            isRefreshing = true;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ refresh_token: refreshToken })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    token = data.access_token;
+                    localStorage.setItem('access_token', token);
+                    isRefreshing = false;
+                    return token;
+                } else {
+                    // Refresh token невалидный, перенаправляем на вход
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/index.html';
+                }
+            } catch (e) {
+                console.error('Error refreshing token:', e);
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/index.html';
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        // Обертка для fetch с автоматическим обновлением токена
+        async function authenticatedFetch(url, options = {}) {
+            // Добавляем токен к запросу
+            if (!options.headers) options.headers = {};
+            options.headers['Authorization'] = `Bearer ${token}`;
+
+            let response = await fetch(url, options);
+
+            // Если токен истек, обновляем его и повторяем запрос
+            if (response.status === 401) {
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    options.headers['Authorization'] = `Bearer ${newToken}`;
+                    response = await fetch(url, options);
+                }
+            }
+
+            return response;
+        }
 
         // Применяем тему сразу при загрузке скрипта (до DOMContentLoaded)
         (function() {
@@ -507,12 +1214,25 @@
             addProductForm();
         });
 
-        function loadUsername() {
+        async function loadUsername() {
             try {
                 const tokenData = JSON.parse(atob(token.split('.')[1]));
-                document.getElementById('username').textContent = tokenData.username;
+                // Пытаемся загрузить профиль для получения имени
+                try {
+                    const response = await authenticatedFetch(`${API_URL}/user/profile`);
+                    if (response.ok) {
+                        const profile = await response.json();
+                        // Приоритет: username (имя) > email
+                        document.getElementById('username').textContent = profile.username || profile.email || 'Пользователь';
+                    } else {
+                        document.getElementById('username').textContent = tokenData.username || tokenData.email || 'Пользователь';
+                    }
+                } catch (e) {
+                    document.getElementById('username').textContent = tokenData.username || tokenData.email || 'Пользователь';
+                }
             } catch (e) {
                 localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
                 window.location.href = '/index.html';
             }
         }
@@ -523,6 +1243,18 @@
             document.getElementById(tab).classList.add('active');
             document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
             if (tab === 'products') loadProducts();
+            if (tab === 'manage') {
+                setManageMarketplace('ozon');
+            }
+            if (tab === 'orders') {
+                setOrdersMarketplace('ozon');
+            }
+            if (tab === 'analytics') {
+                setAnalyticsMarketplace('ozon');
+            }
+            if (tab === 'reviews') {
+                setReviewsMarketplace('ozon');
+            }
         }
 
         // Выпадающее меню пользователя
@@ -545,6 +1277,8 @@
             document.getElementById('profileModal').classList.add('active');
             document.getElementById('userMenu').classList.remove('active');
             loadApiKeys();
+            loadUserInfo();
+            load2FAStatus();
         }
 
         function closeProfileModal() {
@@ -3004,6 +3738,404 @@
             }
         }
 
+        // === PROFILE MANAGEMENT ===
+        async function loadCurrentUsername() {
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/profile`);
+                if (response.ok) {
+                    const profile = await response.json();
+                    const usernameInput = document.getElementById('newUsername');
+                    if (usernameInput) {
+                        usernameInput.value = profile.username || '';
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading current username:', e);
+            }
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/profile`);
+                if (response.ok) {
+                    const profile = await response.json();
+                    const userInfoContent = document.getElementById('userInfoContent');
+                    let emailStatus;
+                    if (profile.email_verified) {
+                        emailStatus = '✅ Подтвержден';
+                    } else {
+                        if (profile.verification_token) {
+                            const verifyUrl = `${window.location.origin}/verify-email.html?token=${profile.verification_token}`;
+                            emailStatus = `⚠️ Не подтвержден. <a href="${verifyUrl}" target="_blank" style="color: #667eea; text-decoration: underline;">Подтвердить email</a>`;
+                        } else {
+                            emailStatus = '⚠️ Не подтвержден. Токен истек. Обратитесь в поддержку.';
+                        }
+                    }
+                    userInfoContent.innerHTML = `
+                        <div><strong>Email:</strong> ${profile.email} ${emailStatus}</div>
+                        <div style="margin-top: 0.5rem;"><strong>2FA:</strong> ${profile.two_factor_enabled ? '✅ Включена' : '❌ Отключена'}</div>
+                        <div style="margin-top: 0.5rem;"><strong>Тема:</strong> ${profile.theme === 'dark' ? '🌙 Темная' : '☀️ Светлая'}</div>
+                    `;
+                }
+            } catch (e) {
+                console.error('Error loading user info:', e);
+            }
+        }
+
+        async function load2FAStatus() {
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/profile`);
+                if (response.ok) {
+                    const profile = await response.json();
+                    const statusDiv = document.getElementById('2faStatusContent');
+                    const setupDiv = document.getElementById('2faSetup');
+                    const qrDiv = document.getElementById('2faQR');
+                    
+                    const disableDiv = document.getElementById('2faDisable');
+                    
+                    if (profile.two_factor_enabled) {
+                        statusDiv.innerHTML = '<div style="color: #27ae60;">✅ Двухфакторная аутентификация включена</div><p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">При каждом входе потребуется код из приложения-аутентификатора.</p>';
+                        setupDiv.style.display = 'none';
+                        disableDiv.style.display = 'block';
+                        qrDiv.style.display = 'none';
+                        // Очищаем поле пароля
+                        document.getElementById('2faDisablePassword').value = '';
+                    } else {
+                        statusDiv.innerHTML = '<div style="color: #e74c3c;">❌ Двухфакторная аутентификация отключена</div>';
+                        setupDiv.style.display = 'block';
+                        disableDiv.style.display = 'none';
+                        qrDiv.style.display = 'none';
+                        // Очищаем поле пароля
+                        document.getElementById('2faSetupPassword').value = '';
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading 2FA status:', e);
+            }
+        }
+
+        function switchProfileTab(tab) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.profile-tab-content').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none';
+            });
+            document.querySelectorAll('.profile-tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Показываем выбранную вкладку
+            const tabElement = document.getElementById(`${tab}-tab`);
+            if (tabElement) {
+                tabElement.classList.add('active');
+                tabElement.style.display = 'block';
+            }
+            
+            const button = document.querySelector(`[onclick="switchProfileTab('${tab}')"]`);
+            if (button) {
+                button.classList.add('active');
+            }
+            
+            // Загружаем данные для вкладки
+            if (tab === 'security') {
+                // Очищаем поля
+                document.getElementById('newUsername').value = '';
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('newEmail').value = '';
+                document.getElementById('emailChangePassword').value = '';
+                document.getElementById('newPasswordStrength').innerHTML = '';
+                document.getElementById('emailChangeStatus').innerHTML = '';
+                document.getElementById('usernameChangeStatus').innerHTML = '';
+                // Загружаем текущее имя
+                loadCurrentUsername();
+            } else if (tab === '2fa') {
+                load2FAStatus();
+            }
+        }
+
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        function checkPasswordStrength(inputId, password) {
+            const strengthDiv = document.getElementById('newPasswordStrength');
+            if (!strengthDiv) return;
+            
+            if (!password) {
+                strengthDiv.innerHTML = '';
+                return;
+            }
+
+            const requirements = {
+                length: password.length >= 8,
+                lowercase: /[a-z]/.test(password),
+                uppercase: /[A-Z]/.test(password),
+                numbers: /[0-9]/.test(password),
+                special: /[!@#$%^&*(),.?":{}|<>_+\-=\[\]\\\/]/.test(password)
+            };
+
+            let strength = 0;
+            if (requirements.length) strength++;
+            if (requirements.lowercase) strength++;
+            if (requirements.uppercase) strength++;
+            if (requirements.numbers) strength++;
+            if (requirements.special) strength++;
+            if (password.length >= 12) strength = Math.min(strength + 1, 5);
+            if (password.length >= 16) strength = Math.min(strength + 1, 5);
+
+            const strengthLabels = ['Очень слабый', 'Слабый', 'Средний', 'Хороший', 'Отличный', 'Превосходный'];
+            const strengthColors = ['#e74c3c', '#e67e22', '#f39c12', '#27ae60', '#2ecc71', '#16a085'];
+            const strengthPercentages = [0, 20, 40, 60, 80, 100];
+
+            const currentStrength = Math.min(strength, 5);
+            const strengthLabel = strengthLabels[currentStrength] || 'Очень слабый';
+            const strengthColor = strengthColors[currentStrength] || '#e74c3c';
+            const strengthPercentage = strengthPercentages[currentStrength] || 0;
+
+            strengthDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <div style="flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden;">
+                        <div style="width: ${strengthPercentage}%; height: 100%; background: ${strengthColor}; transition: all 0.3s;"></div>
+                    </div>
+                    <span style="color: ${strengthColor}; font-weight: 600; font-size: 0.85rem; min-width: 100px; text-align: right;">${strengthLabel}</span>
+                </div>
+            `;
+
+            return strength >= 3 && requirements.length && (requirements.lowercase || requirements.uppercase) && requirements.numbers;
+        }
+
+        async function changeUsername() {
+            const newUsername = document.getElementById('newUsername').value.trim();
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/change-username`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        new_username: newUsername || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('✅ Имя успешно изменено', 'success');
+                    document.getElementById('newUsername').value = '';
+                    const statusDiv = document.getElementById('usernameChangeStatus');
+                    statusDiv.innerHTML = '';
+                    // Перезагружаем информацию о пользователе
+                    loadUserInfo();
+                    loadUsername();
+                } else {
+                    const statusDiv = document.getElementById('usernameChangeStatus');
+                    statusDiv.innerHTML = `<div style="color: #e74c3c; padding: 0.5rem; background: #f8d7da; border-radius: 8px;">❌ ${data.detail || 'Ошибка при изменении имени'}</div>`;
+                }
+            } catch (e) {
+                const statusDiv = document.getElementById('usernameChangeStatus');
+                statusDiv.innerHTML = `<div style="color: #e74c3c; padding: 0.5rem; background: #f8d7da; border-radius: 8px;">❌ Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            
+            if (!currentPassword || !newPassword) {
+                showAlert('⚠️ Заполни все поля', 'error');
+                return;
+            }
+            
+            const isValidPassword = checkPasswordStrength('newPassword', newPassword);
+            if (!isValidPassword) {
+                showAlert('Пароль не соответствует требованиям безопасности', 'error');
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('✅ Пароль успешно изменен', 'success');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('newPasswordStrength').innerHTML = '';
+                } else {
+                    showAlert(`❌ ${data.detail || 'Ошибка при смене пароля'}`, 'error');
+                }
+            } catch (e) {
+                showAlert(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+
+        async function requestEmailChange() {
+            const newEmail = document.getElementById('newEmail').value;
+            const password = document.getElementById('emailChangePassword').value;
+            
+            if (!newEmail || !password) {
+                showAlert('⚠️ Заполни все поля', 'error');
+                return;
+            }
+            
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                showAlert('⚠️ Неверный формат email', 'error');
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/change-email/request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        new_email: newEmail,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const statusDiv = document.getElementById('emailChangeStatus');
+                    statusDiv.innerHTML = `<div style="color: #27ae60; padding: 1rem; background: #d4edda; border-radius: 8px;">
+                        ✅ Запрос на смену email отправлен. Проверьте новый email для подтверждения.
+                        ${data.verification_token ? `<br><br><small>Токен верификации (для тестирования): <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace;">${data.verification_token}</code></small>` : ''}
+                    </div>`;
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('emailChangePassword').value = '';
+                } else {
+                    showAlert(`❌ ${data.detail || 'Ошибка при запросе смены email'}`, 'error');
+                }
+            } catch (e) {
+                showAlert(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+
+        async function setup2FA() {
+            const password = document.getElementById('2faSetupPassword').value;
+            
+            if (!password) {
+                showAlert('⚠️ Введи пароль', 'error');
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/2fa/setup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('2faSetup').style.display = 'none';
+                    document.getElementById('2faQR').style.display = 'block';
+                    document.getElementById('2faQRCode').src = data.qr_code;
+                    document.getElementById('2faVerifyCode').value = '';
+                    document.getElementById('2faVerifyCode').focus();
+                } else {
+                    showAlert(`❌ ${data.detail || 'Ошибка при настройке 2FA'}`, 'error');
+                }
+            } catch (e) {
+                showAlert(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+
+        async function disable2FA() {
+            const password = document.getElementById('2faDisablePassword').value;
+            
+            if (!password) {
+                showAlert('⚠️ Введи пароль', 'error');
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/2fa/disable`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('✅ 2FA успешно отключена', 'success');
+                    document.getElementById('2faDisablePassword').value = '';
+                    // Перезагружаем статус
+                    load2FAStatus();
+                    loadUserInfo();
+                } else {
+                    showAlert(`❌ ${data.detail || 'Ошибка при отключении 2FA'}`, 'error');
+                }
+            } catch (e) {
+                showAlert(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+
+        async function verify2FASetup() {
+            const code = document.getElementById('2faVerifyCode').value;
+            
+            if (!code || code.length !== 6) {
+                showAlert('⚠️ Введи 6-значный код', 'error');
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/user/2fa/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('✅ 2FA успешно включена', 'success');
+                    cancel2FASetup();
+                    load2FAStatus();
+                } else {
+                    showAlert(`❌ ${data.detail || 'Неверный код'}`, 'error');
+                    document.getElementById('2faVerifyCode').value = '';
+                }
+            } catch (e) {
+                showAlert(`❌ Ошибка: ${e.message}`, 'error');
+            }
+        }
+
+        function cancel2FASetup() {
+            document.getElementById('2faSetup').style.display = 'block';
+            document.getElementById('2faQR').style.display = 'none';
+            document.getElementById('2faSetupPassword').value = '';
+            document.getElementById('2faVerifyCode').value = '';
+        }
+
+
         // === ЭКСПОРТ/ИМПОРТ CSV ===
         function exportProductsToCSV() {
             if (productForms.length === 0) {
@@ -3331,6 +4463,1065 @@
         function logout() {
             localStorage.removeItem('access_token');
             window.location.href = '/index.html';
+        }
+
+        // ======================== УПРАВЛЕНИЕ ТОВАРАМИ ========================
+        let currentManageMarketplace = 'ozon';
+
+        function setManageMarketplace(marketplace) {
+            currentManageMarketplace = marketplace;
+            document.querySelectorAll('.marketplace-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('ozonManage').style.display = marketplace === 'ozon' ? 'block' : 'none';
+            document.getElementById('wbManage').style.display = marketplace === 'wildberries' ? 'block' : 'none';
+            if (marketplace === 'ozon') {
+                document.getElementById('manageOzonBtn').classList.add('active');
+            } else {
+                document.getElementById('manageWbBtn').classList.add('active');
+            }
+        }
+
+        // Ozon функции
+        async function loadOzonProducts() {
+            const offerId = document.getElementById('ozonListOfferId').value.trim();
+            const container = document.getElementById('ozonProductsList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                let url = `${API_URL}/ozon/products/list?visibility=ALL`;
+                if (offerId) {
+                    url += `&offer_id=${encodeURIComponent(offerId)}`;
+                }
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const products = data.body?.items || [];
+                    if (products.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Товары не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">Offer ID</th><th style="padding: 0.5rem; text-align: left;">Product ID</th><th style="padding: 0.5rem; text-align: left;">Название</th><th style="padding: 0.5rem; text-align: left;">Статус</th></tr>`;
+                        products.forEach(p => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${p.offer_id || '-'}</td><td style="padding: 0.5rem;">${p.product_id || '-'}</td><td style="padding: 0.5rem;">${p.name || '-'}</td><td style="padding: 0.5rem;">${p.visible ? '✅ Видимый' : '❌ Скрытый'}</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getOzonProductInfo() {
+            const id = document.getElementById('ozonProductInfoId').value.trim();
+            const container = document.getElementById('ozonProductInfo');
+            
+            if (!id) {
+                showAlert('⚠️ Введите offer_id, product_id или sku', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                let url = `${API_URL}/ozon/products/info?`;
+                if (id.match(/^\d+$/)) {
+                    // Это число - может быть product_id или sku
+                    url += `product_id=${id}`;
+                } else {
+                    // Это строка - offer_id
+                    url += `offer_id=${encodeURIComponent(id)}`;
+                }
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const product = data.body?.result || data.body;
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(product, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function deleteOzonProduct() {
+            const ids = document.getElementById('ozonDeleteIds').value.trim();
+            const container = document.getElementById('ozonDeleteResult');
+            
+            if (!ids) {
+                showAlert('⚠️ Введите product_id, offer_id или sku', 'error');
+                return;
+            }
+            
+            if (!confirm('⚠️ Вы уверены, что хотите удалить этот товар?')) {
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Удаление...</div>';
+            
+            try {
+                const idList = ids.split(',').map(id => id.trim());
+                let payload = {};
+                
+                // Определяем тип ID
+                if (idList[0].match(/^\d+$/)) {
+                    payload.product_id = idList.map(id => parseInt(id));
+                } else {
+                    payload.offer_id = idList;
+                }
+                
+                const response = await authenticatedFetch(`${API_URL}/ozon/products/delete`, {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Товар успешно удален</div>';
+                    document.getElementById('ozonDeleteIds').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function updateOzonPrices() {
+            const pricesJson = document.getElementById('ozonPricesJson').value.trim();
+            const container = document.getElementById('ozonPricesResult');
+            
+            if (!pricesJson) {
+                showAlert('⚠️ Введите данные для обновления цен', 'error');
+                return;
+            }
+            
+            try {
+                let prices = JSON.parse(pricesJson);
+                
+                // Преобразуем понятные названия в API формат и рубли в копейки
+                prices = prices.map(item => {
+                    const result = {};
+                    
+                    // Обработка артикула (может быть "артикул" или "offer_id")
+                    result.offer_id = item.артикул || item.offer_id || item['артикул'];
+                    
+                    // Обработка цены (может быть "цена" или "price") - преобразуем рубли в копейки
+                    const priceInRubles = item.цена || item.price || item['цена'];
+                    if (priceInRubles !== undefined) {
+                        result.price = String(Math.round(parseFloat(priceInRubles) * 100));
+                    }
+                    
+                    // Обработка старой цены (может быть "старая_цена" или "old_price") - преобразуем рубли в копейки
+                    const oldPriceInRubles = item.старая_цена || item.old_price || item['старая_цена'];
+                    if (oldPriceInRubles !== undefined) {
+                        result.old_price = String(Math.round(parseFloat(oldPriceInRubles) * 100));
+                    }
+                    
+                    // Если уже в формате API, оставляем как есть
+                    if (item.offer_id && !result.offer_id) {
+                        result.offer_id = item.offer_id;
+                    }
+                    if (item.price && !result.price) {
+                        // Если цена уже строка (в копейках), оставляем
+                        result.price = String(item.price);
+                    }
+                    if (item.old_price && !result.old_price) {
+                        result.old_price = String(item.old_price);
+                    }
+                    
+                    return result;
+                });
+                
+                container.innerHTML = '<div class="loading">Обновление цен...</div>';
+                
+                const response = await authenticatedFetch(`${API_URL}/ozon/products/prices`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(prices)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Цены успешно обновлены</div>';
+                    document.getElementById('ozonPricesJson').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка парсинга JSON: ${e.message}</div>`;
+            }
+        }
+
+        async function updateOzonStocks() {
+            const stocksJson = document.getElementById('ozonStocksJson').value.trim();
+            const container = document.getElementById('ozonStocksResult');
+            
+            if (!stocksJson) {
+                showAlert('⚠️ Введите данные для обновления остатков', 'error');
+                return;
+            }
+            
+            try {
+                let stocks = JSON.parse(stocksJson);
+                
+                // Преобразуем понятные названия в API формат
+                stocks = stocks.map(item => {
+                    const result = {};
+                    
+                    // Обработка артикула (может быть "артикул" или "offer_id")
+                    result.offer_id = item.артикул || item.offer_id || item['артикул'];
+                    
+                    // Обработка остатка (может быть "остаток" или "stock")
+                    result.stock = item.остаток || item.stock || item['остаток'];
+                    
+                    // Если уже в формате API, оставляем как есть
+                    if (item.offer_id && !result.offer_id) {
+                        result.offer_id = item.offer_id;
+                    }
+                    if (item.stock !== undefined && result.stock === undefined) {
+                        result.stock = item.stock;
+                    }
+                    
+                    return result;
+                });
+                
+                container.innerHTML = '<div class="loading">Обновление остатков...</div>';
+                
+                const response = await authenticatedFetch(`${API_URL}/ozon/products/stocks`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(stocks)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Остатки успешно обновлены</div>';
+                    document.getElementById('ozonStocksJson').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка парсинга JSON: ${e.message}</div>`;
+            }
+        }
+
+        // Wildberries функции
+        async function loadWbProducts() {
+            const limit = parseInt(document.getElementById('wbListLimit').value) || 100;
+            const container = document.getElementById('wbProductsList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/products/list?limit=${limit}&offset=0`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const cards = data.body?.data?.cards || data.body?.cards || [];
+                    if (cards.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Карточки не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">NM ID</th><th style="padding: 0.5rem; text-align: left;">Vendor Code</th><th style="padding: 0.5rem; text-align: left;">Название</th><th style="padding: 0.5rem; text-align: left;">Бренд</th></tr>`;
+                        cards.forEach(card => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${card.nmID || '-'}</td><td style="padding: 0.5rem;">${card.vendorCode || '-'}</td><td style="padding: 0.5rem;">${card.imtName || card.title || '-'}</td><td style="padding: 0.5rem;">${card.brand || '-'}</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getWbProductInfo() {
+            const id = document.getElementById('wbProductInfoId').value.trim();
+            const container = document.getElementById('wbProductInfo');
+            
+            if (!id) {
+                showAlert('⚠️ Введите nm_id или vendor_code', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                let url = `${API_URL}/wb/products/info?`;
+                if (id.match(/^\d+$/)) {
+                    url += `nm_id=${id}`;
+                } else {
+                    url += `vendor_code=${encodeURIComponent(id)}`;
+                }
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const card = data.body?.data?.[0] || data.body?.[0] || data.body;
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(card, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function deleteWbProduct() {
+            const nmId = parseInt(document.getElementById('wbDeleteNmId').value);
+            const container = document.getElementById('wbDeleteResult');
+            
+            if (!nmId) {
+                showAlert('⚠️ Введите nm_id', 'error');
+                return;
+            }
+            
+            if (!confirm('⚠️ Вы уверены, что хотите удалить эту карточку?')) {
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Удаление...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/products/delete?nm_id=${nmId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Карточка успешно удалена</div>';
+                    document.getElementById('wbDeleteNmId').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function updateWbPrices() {
+            const pricesJson = document.getElementById('wbPricesJson').value.trim();
+            const container = document.getElementById('wbPricesResult');
+            
+            if (!pricesJson) {
+                showAlert('⚠️ Введите JSON с ценами', 'error');
+                return;
+            }
+            
+            try {
+                const prices = JSON.parse(pricesJson);
+                container.innerHTML = '<div class="loading">Обновление цен...</div>';
+                
+                const response = await authenticatedFetch(`${API_URL}/wb/products/prices`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(prices)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Цены успешно обновлены</div>';
+                    document.getElementById('wbPricesJson').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка парсинга JSON: ${e.message}</div>`;
+            }
+        }
+
+        async function updateWbStocks() {
+            const stocksJson = document.getElementById('wbStocksJson').value.trim();
+            const container = document.getElementById('wbStocksResult');
+            
+            if (!stocksJson) {
+                showAlert('⚠️ Введите данные для обновления остатков', 'error');
+                return;
+            }
+            
+            try {
+                let stocks = JSON.parse(stocksJson);
+                
+                // Преобразуем понятные названия в API формат
+                stocks = stocks.map(item => {
+                    const result = {};
+                    
+                    // Обработка склада (может быть "склад" или "warehouseId")
+                    result.warehouseId = item.склад || item.warehouseId || item['склад'];
+                    
+                    // Обработка товаров (может быть "товары" или "skus")
+                    const товары = item.товары || item.skus || item['товары'];
+                    if (товары) {
+                        result.skus = товары.map(sku => {
+                            const skuResult = {};
+                            skuResult.sku = sku.артикул || sku.sku || sku['артикул'];
+                            skuResult.amount = sku.количество || sku.amount || sku['количество'];
+                            
+                            // Если уже в формате API
+                            if (sku.sku && !skuResult.sku) {
+                                skuResult.sku = sku.sku;
+                            }
+                            if (sku.amount !== undefined && skuResult.amount === undefined) {
+                                skuResult.amount = sku.amount;
+                            }
+                            
+                            return skuResult;
+                        });
+                    }
+                    
+                    // Если уже в формате API, оставляем как есть
+                    if (item.warehouseId && !result.warehouseId) {
+                        result.warehouseId = item.warehouseId;
+                    }
+                    if (item.skus && !result.skus) {
+                        result.skus = item.skus;
+                    }
+                    
+                    return result;
+                });
+                
+                container.innerHTML = '<div class="loading">Обновление остатков...</div>';
+                
+                const response = await authenticatedFetch(`${API_URL}/wb/products/stocks`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(stocks)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Остатки успешно обновлены</div>';
+                    document.getElementById('wbStocksJson').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка парсинга JSON: ${e.message}</div>`;
+            }
+        }
+
+        // ======================== ЗАКАЗЫ ========================
+        let currentOrdersMarketplace = 'ozon';
+
+        function setOrdersMarketplace(marketplace) {
+            currentOrdersMarketplace = marketplace;
+            document.querySelectorAll('#orders .marketplace-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('ozonOrders').style.display = marketplace === 'ozon' ? 'block' : 'none';
+            document.getElementById('wbOrders').style.display = marketplace === 'wildberries' ? 'block' : 'none';
+            if (marketplace === 'ozon') {
+                document.getElementById('ordersOzonBtn').classList.add('active');
+            } else {
+                document.getElementById('ordersWbBtn').classList.add('active');
+            }
+        }
+
+        // Ozon заказы
+        async function loadOzonOrders() {
+            const limit = parseInt(document.getElementById('ozonOrdersLimit').value) || 100;
+            const offset = parseInt(document.getElementById('ozonOrdersOffset').value) || 0;
+            const container = document.getElementById('ozonOrdersList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/orders/list?limit=${limit}&offset=${offset}&dir=ASC`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const orders = data.body?.result?.postings || [];
+                    if (orders.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Заказы не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">Номер</th><th style="padding: 0.5rem; text-align: left;">Статус</th><th style="padding: 0.5rem; text-align: left;">Дата создания</th></tr>`;
+                        orders.forEach(order => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${order.posting_number || '-'}</td><td style="padding: 0.5rem;">${order.status || '-'}</td><td style="padding: 0.5rem;">${order.created_at || '-'}</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getOzonOrderInfo() {
+            const postingNumber = document.getElementById('ozonOrderNumber').value.trim();
+            const container = document.getElementById('ozonOrderInfo');
+            
+            if (!postingNumber) {
+                showAlert('⚠️ Введите номер отправления', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/orders/info?posting_number=${encodeURIComponent(postingNumber)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const order = data.body?.result || data.body;
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(order, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function cancelOzonOrder() {
+            const postingNumber = document.getElementById('ozonCancelOrderNumber').value.trim();
+            const cancelReasonId = parseInt(document.getElementById('ozonCancelReasonId').value);
+            const container = document.getElementById('ozonCancelResult');
+            
+            if (!postingNumber || !cancelReasonId) {
+                showAlert('⚠️ Заполните все поля', 'error');
+                return;
+            }
+            
+            if (!confirm('⚠️ Вы уверены, что хотите отменить заказ?')) {
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Отмена заказа...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/orders/cancel`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({posting_number: postingNumber, cancel_reason_id: cancelReasonId})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Заказ успешно отменен</div>';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        // Wildberries заказы
+        async function loadWbOrders() {
+            const dateFrom = document.getElementById('wbOrdersDateFrom').value;
+            const dateTo = document.getElementById('wbOrdersDateTo').value;
+            const take = parseInt(document.getElementById('wbOrdersTake').value) || 100;
+            const container = document.getElementById('wbOrdersList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                let url = `${API_URL}/wb/orders/list?take=${take}&skip=0`;
+                if (dateFrom) url += `&date_from=${dateFrom}`;
+                if (dateTo) url += `&date_to=${dateTo}`;
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const orders = data.body || [];
+                    if (orders.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Заказы не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">Номер</th><th style="padding: 0.5rem; text-align: left;">Статус</th><th style="padding: 0.5rem; text-align: left;">Дата</th></tr>`;
+                        orders.forEach(order => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${order.id || '-'}</td><td style="padding: 0.5rem;">${order.status || '-'}</td><td style="padding: 0.5rem;">${order.dateCreated || '-'}</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getWbOrderInfo() {
+            const orderId = parseInt(document.getElementById('wbOrderId').value);
+            const container = document.getElementById('wbOrderInfo');
+            
+            if (!orderId) {
+                showAlert('⚠️ Введите номер заказа', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/orders/info?order_id=${orderId}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const order = data.body;
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(order, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function confirmWbOrder() {
+            const orderId = parseInt(document.getElementById('wbConfirmOrderId').value);
+            const container = document.getElementById('wbConfirmResult');
+            
+            if (!orderId) {
+                showAlert('⚠️ Введите номер заказа', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Подтверждение...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/orders/confirm?order_id=${orderId}`, {method: 'PUT'});
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Заказ успешно подтвержден</div>';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function cancelWbOrder() {
+            const orderId = parseInt(document.getElementById('wbCancelOrderId').value);
+            const container = document.getElementById('wbCancelResult');
+            
+            if (!orderId) {
+                showAlert('⚠️ Введите номер заказа', 'error');
+                return;
+            }
+            
+            if (!confirm('⚠️ Вы уверены, что хотите отменить заказ?')) {
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Отмена заказа...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/orders/cancel?order_id=${orderId}`, {method: 'PUT'});
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Заказ успешно отменен</div>';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        // ======================== АНАЛИТИКА ========================
+        let currentAnalyticsMarketplace = 'ozon';
+
+        function setAnalyticsMarketplace(marketplace) {
+            currentAnalyticsMarketplace = marketplace;
+            document.querySelectorAll('#analytics .marketplace-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('ozonAnalytics').style.display = marketplace === 'ozon' ? 'block' : 'none';
+            document.getElementById('wbAnalytics').style.display = marketplace === 'wildberries' ? 'block' : 'none';
+            if (marketplace === 'ozon') {
+                document.getElementById('analyticsOzonBtn').classList.add('active');
+            } else {
+                document.getElementById('analyticsWbBtn').classList.add('active');
+            }
+        }
+
+        // Ozon аналитика
+        async function getOzonSalesReport() {
+            const dateFrom = document.getElementById('ozonSalesDateFrom').value;
+            const dateTo = document.getElementById('ozonSalesDateTo').value;
+            const container = document.getElementById('ozonSalesReport');
+            
+            if (!dateFrom || !dateTo) {
+                showAlert('⚠️ Укажите даты', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка отчета...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/analytics/sales`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({date_from: dateFrom, date_to: dateTo})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data.body, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getOzonStocksReport() {
+            const container = document.getElementById('ozonStocksReport');
+            container.innerHTML = '<div class="loading">Загрузка отчета...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/analytics/stocks`, {method: 'POST'});
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data.body, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getOzonFinanceReport() {
+            const page = parseInt(document.getElementById('ozonFinancePage').value) || 1;
+            const pageSize = parseInt(document.getElementById('ozonFinancePageSize').value) || 100;
+            const container = document.getElementById('ozonFinanceReport');
+            container.innerHTML = '<div class="loading">Загрузка отчета...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/analytics/finance`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({page: page, page_size: pageSize})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data.body, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        // Wildberries аналитика
+        async function getWbSalesReport() {
+            const dateFrom = document.getElementById('wbSalesDateFrom').value;
+            const dateTo = document.getElementById('wbSalesDateTo').value;
+            const container = document.getElementById('wbSalesReport');
+            
+            if (!dateFrom || !dateTo) {
+                showAlert('⚠️ Укажите даты', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка отчета...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/analytics/sales?date_from=${dateFrom}&date_to=${dateTo}&rrdid=0`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data.body, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getWbStocksReport() {
+            const dateFrom = document.getElementById('wbStocksDateFrom').value;
+            const container = document.getElementById('wbStocksReport');
+            container.innerHTML = '<div class="loading">Загрузка отчета...</div>';
+            
+            try {
+                let url = `${API_URL}/wb/analytics/stocks`;
+                if (dateFrom) url += `?date_from=${dateFrom}`;
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data.body, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function getWbPaymentsReport() {
+            const dateFrom = document.getElementById('wbPaymentsDateFrom').value;
+            const dateTo = document.getElementById('wbPaymentsDateTo').value;
+            const container = document.getElementById('wbPaymentsReport');
+            
+            if (!dateFrom || !dateTo) {
+                showAlert('⚠️ Укажите даты', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Загрузка отчета...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/analytics/payments?date_from=${dateFrom}&date_to=${dateTo}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = `<pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto;">${JSON.stringify(data.body, null, 2)}</pre>`;
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        // ======================== ОТЗЫВЫ ========================
+        let currentReviewsMarketplace = 'ozon';
+
+        function setReviewsMarketplace(marketplace) {
+            currentReviewsMarketplace = marketplace;
+            document.querySelectorAll('#reviews .marketplace-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('ozonReviews').style.display = marketplace === 'ozon' ? 'block' : 'none';
+            document.getElementById('wbReviews').style.display = marketplace === 'wildberries' ? 'block' : 'none';
+            if (marketplace === 'ozon') {
+                document.getElementById('reviewsOzonBtn').classList.add('active');
+            } else {
+                document.getElementById('reviewsWbBtn').classList.add('active');
+            }
+        }
+
+        // Ozon отзывы
+        async function loadOzonReviews() {
+            const page = parseInt(document.getElementById('ozonReviewsPage').value) || 1;
+            const pageSize = parseInt(document.getElementById('ozonReviewsPageSize').value) || 10;
+            const container = document.getElementById('ozonReviewsList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/reviews/list`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({page: page, page_size: pageSize})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const reviews = data.body?.result || [];
+                    if (reviews.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Отзывы не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">ID</th><th style="padding: 0.5rem; text-align: left;">Рейтинг</th><th style="padding: 0.5rem; text-align: left;">Текст</th></tr>`;
+                        reviews.forEach(review => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${review.id || '-'}</td><td style="padding: 0.5rem;">${review.rating || '-'}</td><td style="padding: 0.5rem;">${(review.text || '').substring(0, 50)}...</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function answerOzonReview() {
+            const reviewId = parseInt(document.getElementById('ozonReviewId').value);
+            const text = document.getElementById('ozonReviewAnswer').value.trim();
+            const container = document.getElementById('ozonReviewAnswerResult');
+            
+            if (!reviewId || !text) {
+                showAlert('⚠️ Заполните все поля', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Отправка ответа...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/ozon/reviews/answer`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({review_id: reviewId, text: text})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Ответ успешно отправлен</div>';
+                    document.getElementById('ozonReviewId').value = '';
+                    document.getElementById('ozonReviewAnswer').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        // Wildberries вопросы и отзывы
+        async function loadWbQuestions() {
+            const dateFrom = document.getElementById('wbQuestionsDateFrom').value;
+            const dateTo = document.getElementById('wbQuestionsDateTo').value;
+            const take = parseInt(document.getElementById('wbQuestionsTake').value) || 100;
+            const container = document.getElementById('wbQuestionsList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                let url = `${API_URL}/wb/questions/list?take=${take}&skip=0`;
+                if (dateFrom) url += `&date_from=${dateFrom}`;
+                if (dateTo) url += `&date_to=${dateTo}`;
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const questions = data.body?.data || data.body || [];
+                    if (questions.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Вопросы не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">ID</th><th style="padding: 0.5rem; text-align: left;">Текст</th><th style="padding: 0.5rem; text-align: left;">Ответ</th></tr>`;
+                        questions.forEach(q => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${q.id || '-'}</td><td style="padding: 0.5rem;">${(q.text || '').substring(0, 50)}...</td><td style="padding: 0.5rem;">${q.answer ? '✅' : '❌'}</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function answerWbQuestion() {
+            const questionId = parseInt(document.getElementById('wbQuestionId').value);
+            const text = document.getElementById('wbQuestionAnswer').value.trim();
+            const container = document.getElementById('wbQuestionAnswerResult');
+            
+            if (!questionId || !text) {
+                showAlert('⚠️ Заполните все поля', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Отправка ответа...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/questions/answer`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({question_id: questionId, text: text})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Ответ успешно отправлен</div>';
+                    document.getElementById('wbQuestionId').value = '';
+                    document.getElementById('wbQuestionAnswer').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function loadWbFeedbacks() {
+            const dateFrom = document.getElementById('wbFeedbacksDateFrom').value;
+            const dateTo = document.getElementById('wbFeedbacksDateTo').value;
+            const take = parseInt(document.getElementById('wbFeedbacksTake').value) || 100;
+            const container = document.getElementById('wbFeedbacksList');
+            container.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                let url = `${API_URL}/wb/feedbacks/list?take=${take}&skip=0`;
+                if (dateFrom) url += `&date_from=${dateFrom}`;
+                if (dateTo) url += `&date_to=${dateTo}`;
+                
+                const response = await authenticatedFetch(url);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const feedbacks = data.body?.data || data.body || [];
+                    if (feedbacks.length === 0) {
+                        container.innerHTML = '<div style="color: #666;">Отзывы не найдены</div>';
+                    } else {
+                        let html = `<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;"><tr style="background: #f5f5f5;"><th style="padding: 0.5rem; text-align: left;">ID</th><th style="padding: 0.5rem; text-align: left;">Рейтинг</th><th style="padding: 0.5rem; text-align: left;">Текст</th><th style="padding: 0.5rem; text-align: left;">Ответ</th></tr>`;
+                        feedbacks.forEach(f => {
+                            html += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 0.5rem;">${f.id || '-'}</td><td style="padding: 0.5rem;">${f.rating || '-'}</td><td style="padding: 0.5rem;">${(f.text || '').substring(0, 50)}...</td><td style="padding: 0.5rem;">${f.answer ? '✅' : '❌'}</td></tr>`;
+                        });
+                        html += '</table></div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
+        }
+
+        async function answerWbFeedback() {
+            const feedbackId = parseInt(document.getElementById('wbFeedbackId').value);
+            const text = document.getElementById('wbFeedbackAnswer').value.trim();
+            const container = document.getElementById('wbFeedbackAnswerResult');
+            
+            if (!feedbackId || !text) {
+                showAlert('⚠️ Заполните все поля', 'error');
+                return;
+            }
+            
+            container.innerHTML = '<div class="loading">Отправка ответа...</div>';
+            
+            try {
+                const response = await authenticatedFetch(`${API_URL}/wb/feedbacks/answer`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({feedback_id: feedbackId, text: text})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    container.innerHTML = '<div style="color: #27ae60;">✅ Ответ успешно отправлен</div>';
+                    document.getElementById('wbFeedbackId').value = '';
+                    document.getElementById('wbFeedbackAnswer').value = '';
+                } else {
+                    container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${data.error || data.body?.error?.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div style="color: #e74c3c;">Ошибка: ${e.message}</div>`;
+            }
         }
     </script>
 </body>
