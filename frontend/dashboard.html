@@ -494,6 +494,10 @@
         })();
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Инициализируем drag-and-drop для всех форм при загрузке страницы
+            setTimeout(() => {
+                initializeAllForms();
+            }, 1000);
             loadUsername();
             await loadTheme();
             // Загружаем шаблоны сразу при загрузке страницы
@@ -2077,11 +2081,132 @@
             const imageItems = Array.from(container.querySelectorAll('.media-item[data-url]'));
             const orderedUrls = imageItems.map(item => item.dataset.url);
             
-            if (localImagePaths[formId]) {
-                // Обновляем массив, сохраняя только те URL, которые есть в контейнере
-                localImagePaths[formId] = orderedUrls;
-                console.log(`[Form ${formId}] Image order updated:`, orderedUrls);
+            if (!localImagePaths[formId]) {
+                localImagePaths[formId] = [];
             }
+            // Обновляем массив, сохраняя только те URL, которые есть в контейнере
+            localImagePaths[formId] = orderedUrls;
+            console.log(`[Form ${formId}] Image order updated:`, orderedUrls);
+        }
+        
+        // Функция для инициализации drag-and-drop для всех существующих изображений в форме
+        function initializeImageDragAndDrop(formId) {
+            const container = document.getElementById(`image-links-${formId}`);
+            if (!container) {
+                console.log(`[DragDrop] Container not found for form ${formId}`);
+                return;
+            }
+            
+            const imageItems = container.querySelectorAll('.media-item[data-url]');
+            console.log(`[DragDrop] Found ${imageItems.length} images to initialize for form ${formId}`);
+            
+            if (imageItems.length === 0) {
+                console.log(`[DragDrop] No images found in form ${formId}`);
+                return;
+            }
+            
+            imageItems.forEach((mediaItem, index) => {
+                const url = mediaItem.dataset.url;
+                if (!url) {
+                    console.warn(`[DragDrop] Image ${index} in form ${formId} has no URL`);
+                    return;
+                }
+                
+                console.log(`[DragDrop] Processing image ${index} in form ${formId}, URL: ${url}`);
+                
+                // Удаляем все старые обработчики, клонируя элемент
+                const newMediaItem = mediaItem.cloneNode(true);
+                mediaItem.parentNode.replaceChild(newMediaItem, mediaItem);
+                
+                // Делаем изображения перетаскиваемыми
+                newMediaItem.draggable = true;
+                newMediaItem.dataset.index = index;
+                
+                // Обработчики drag-and-drop для изображений
+                newMediaItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', url);
+                    newMediaItem.classList.add('dragging');
+                });
+                
+                newMediaItem.addEventListener('dragend', (e) => {
+                    newMediaItem.classList.remove('dragging');
+                    container.querySelectorAll('.media-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                });
+                
+                newMediaItem.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    newMediaItem.classList.add('drag-over');
+                });
+                
+                newMediaItem.addEventListener('dragleave', (e) => {
+                    newMediaItem.classList.remove('drag-over');
+                });
+                
+                newMediaItem.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    newMediaItem.classList.remove('drag-over');
+                    
+                    const draggedUrl = e.dataTransfer.getData('text/plain');
+                    const draggedItem = container.querySelector(`.media-item[data-url="${draggedUrl}"]`);
+                    
+                    if (draggedItem && draggedItem !== newMediaItem) {
+                        const allItems = Array.from(container.querySelectorAll('.media-item'));
+                        const draggedIndex = allItems.indexOf(draggedItem);
+                        const targetIndex = allItems.indexOf(newMediaItem);
+                        
+                        if (draggedIndex !== -1 && targetIndex !== -1) {
+                            if (draggedIndex < targetIndex) {
+                                container.insertBefore(draggedItem, newMediaItem.nextSibling);
+                            } else {
+                                container.insertBefore(draggedItem, newMediaItem);
+                            }
+                            
+                            updateImageOrder(formId, container);
+                            showAlert('✅ Порядок изображений изменен', 'success');
+                        }
+                    }
+                });
+                
+                // Восстанавливаем обработчик клика для открытия модального окна
+                const img = newMediaItem.querySelector('img');
+                if (img) {
+                    img.style.cursor = 'pointer';
+                    img.onclick = (e) => {
+                        e.stopPropagation();
+                        openMediaModal(url, 'image');
+                    };
+                }
+                
+                // Восстанавливаем обработчик удаления
+                const deleteBtn = newMediaItem.querySelector('.media-delete-btn, button');
+                if (deleteBtn) {
+                    const fileId = newMediaItem.dataset.fileId || null;
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteMediaItem(url, formId, true, fileId);
+                    };
+                }
+            });
+            
+            console.log(`[DragDrop] Initialized drag-and-drop for ${imageItems.length} images in form ${formId}`);
+        }
+        
+        // Функция для инициализации всех форм на странице
+        function initializeAllForms() {
+            const allForms = document.querySelectorAll('.product-form-wrapper');
+            console.log(`[Init] Found ${allForms.length} forms to initialize`);
+            allForms.forEach(formElement => {
+                const formIdMatch = formElement.id.match(/form-(\d+)/);
+                if (formIdMatch) {
+                    const formId = parseInt(formIdMatch[1]);
+                    initializeImageDragAndDrop(formId);
+                }
+            });
         }
         
         // Вспомогательная функция для определения позиции вставки при drag
@@ -2896,11 +3021,6 @@
                 const descEl = document.querySelector(`.description[data-form-id="${form.id}"]`);
                 const barcodeEl = document.querySelector(`.barcode[data-form-id="${form.id}"]`);
                 
-                const images = Array.from(document.querySelectorAll(`#image-links-${form.id} .media-item[data-url]`))
-                    .map(el => el.dataset.url).join(';');
-                const videos = Array.from(document.querySelectorAll(`#video-links-${form.id} .media-item[data-url]`))
-                    .map(el => el.dataset.url).join(';');
-                
                 products.push({
                     offer_id: offerIdEl?.value || '',
                     name: nameEl?.value || '',
@@ -2910,14 +3030,12 @@
                     description: (descEl?.value || '').replace(/\n/g, ' '),
                     barcode: barcodeEl?.value || '',
                     marketplace: currentMarketplace,
-                    category: form.category ? (currentMarketplace === 'ozon' ? (form.category.description_category_id || form.category.category_id || '') : (form.category.parentID || form.category.id || '')) : '',
-                    images: images,
-                    videos: videos
+                    category: form.category ? (currentMarketplace === 'ozon' ? (form.category.description_category_id || form.category.category_id || '') : (form.category.parentID || form.category.id || '')) : ''
                 });
             });
             
             // Создаем CSV с правильным экранированием
-            const headers = ['offer_id', 'name', 'price', 'stock', 'brand', 'description', 'barcode', 'marketplace', 'category', 'images', 'videos'];
+            const headers = ['offer_id', 'name', 'price', 'stock', 'brand', 'description', 'barcode', 'marketplace', 'category'];
             
             // Функция для правильного экранирования CSV значений
             const escapeCSVValue = (value) => {
@@ -3097,51 +3215,7 @@
                                             setMarketplace(product.marketplace);
                                         }
                                         
-                                        // Загружаем изображения, если они есть
-                                        if (product.images) {
-                                            const imageUrls = product.images.split(';').filter(url => url.trim());
-                                            if (imageUrls.length > 0) {
-                                                const imageLinksContainer = document.querySelector(`#image-links-${currentFormId}`);
-                                                if (imageLinksContainer) {
-                                                    imageUrls.forEach(url => {
-                                                        if (url.trim()) {
-                                                            const imgDiv = document.createElement('div');
-                                                            imgDiv.className = 'media-item';
-                                                            imgDiv.setAttribute('data-url', url.trim());
-                                                            imgDiv.innerHTML = `
-                                                                <img src="${url.trim()}" alt="Image" onclick="openMediaModal('${url.trim()}')" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;">
-                                                                <button type="button" onclick="removeMedia('${url.trim()}', ${currentFormId}, 'image')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
-                                                            `;
-                                                            imageLinksContainer.appendChild(imgDiv);
-                                                        }
-                                                    });
-                                                    if (!localImagePaths[currentFormId]) localImagePaths[currentFormId] = [];
-                                                    localImagePaths[currentFormId].push(...imageUrls.map(url => url.trim()));
-                                                }
-                                            }
-                                        }
-                                        
-                                        // Загружаем видео, если они есть
-                                        if (product.videos) {
-                                            const videoUrls = product.videos.split(';').filter(url => url.trim());
-                                            if (videoUrls.length > 0) {
-                                                const videoLinksContainer = document.querySelector(`#video-links-${currentFormId}`);
-                                                if (videoLinksContainer) {
-                                                    videoUrls.forEach(url => {
-                                                        if (url.trim()) {
-                                                            const videoDiv = document.createElement('div');
-                                                            videoDiv.className = 'media-item';
-                                                            videoDiv.setAttribute('data-url', url.trim());
-                                                            videoDiv.innerHTML = `
-                                                                <video src="${url.trim()}" controls style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; cursor: pointer;" onclick="openMediaModal('${url.trim()}')"></video>
-                                                                <button type="button" onclick="removeMedia('${url.trim()}', ${currentFormId}, 'video')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Удалить</button>
-                                                            `;
-                                                            videoLinksContainer.appendChild(videoDiv);
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        }
+                                        // Изображения и видео больше не импортируются из CSV
                                         
                                         console.log(`[Import] Form ${currentFormId} filled successfully`);
                                         resolve();
@@ -3169,6 +3243,12 @@
                             // Небольшая задержка между товарами
                             await new Promise(resolve => setTimeout(resolve, 300));
                         }
+                        
+                        // Инициализируем drag-and-drop для всех форм после импорта
+                        setTimeout(() => {
+                            initializeAllForms();
+                        }, 1500);
+                        
                         console.log(`[Import] All ${products.length} products imported successfully`);
                         showAlert(`✅ Импортировано ${products.length} товаров`, 'success');
                     })();
