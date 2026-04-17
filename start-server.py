@@ -9,7 +9,7 @@ port = os.getenv("PORT", "8000")
 host = os.getenv("HOST", "0.0.0.0")  # На Render нужно 0.0.0.0!
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "minimax/minimax-m2.5:free")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/mistral-7b-instruct:free")
 
 # Проверка наличия обязательных переменных (опционально)
 if not OPENROUTER_API_KEY:
