@@ -44,7 +44,7 @@ SESSION_TIMEOUT_MINUTES = 30  # 30 минут неактивности
 
 # OpenRouter API Config
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_MODEL = "tngtech/deepseek-r1t2-chimera:free"
+OPENROUTER_MODEL = "google/gemma-4-31b-it:free"
 
 # Яндекс Диск API Config
 YANDEX_DISK_CLIENT_ID = os.getenv("YANDEX_DISK_CLIENT_ID", "af8c0ef742e744ce98baa1ba0ef63b1a")

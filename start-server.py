@@ -9,7 +9,7 @@ port = os.getenv("PORT", "8000")
 host = os.getenv("HOST", "0.0.0.0")  # На Render нужно 0.0.0.0!
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "tngtech/deepseek-r1t2-chimera:free")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
 
 # Проверка наличия обязательных переменных (опционально)
 if not OPENROUTER_API_KEY:
